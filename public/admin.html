@@ -405,7 +405,7 @@ function renderRegsTable(regs) {
           ${r.paymentStatus==='pending' && r.paymentReference ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded">✓</button>` : ''}
           ${r.paymentStatus==='pending' ? `<button onclick="rejectPayment('${r.ticketId}')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded">✗</button>` : ''}
           ${r.paymentStatus==='confirmed' && !r.checkedIn ? `<button onclick="checkinPlayer('${r.ticketId}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded">In</button>` : ''}
-          <button onclick="deletePlayer('${r.id}','${esc(r.playerName)}')" class="px-2 py-1 bg-slate-700 hover:bg-red-700 text-white text-xs rounded">🗑</button>
+          <button onclick="deletePlayer('${r.id}','${esc(r.playerName)}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded transition" title="Delete this player">🗑 Delete</button>
         </div>
       </td>
     </tr>`).join('');
@@ -432,9 +432,10 @@ async function checkinPlayer(tid) {
   else showToast(data.error || 'Error', 'red');
 }
 async function deletePlayer(id, name) {
-  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
-  const { ok } = await api('DELETE', '/api/admin/player/' + id);
-  if (ok) { showToast('Player deleted', 'red'); loadRegistrations(); loadOverview(); }
+  if (!confirm('⚠ DELETE PLAYER\n\nAre you sure you want to permanently delete "' + name + '"?\n\nThis cannot be undone and will free up their slot in the tournament.')) return;
+  const { ok, data } = await api('DELETE', '/api/admin/player/' + id);
+  if (ok) { showToast('Player "' + name + '" deleted', 'red'); loadRegistrations(); loadOverview(); }
+  else showToast((data && data.error) || 'Delete failed', 'red');
 }
 
 // ── Tournaments ───────────────────────────────────────────────────────
