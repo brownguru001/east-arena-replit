@@ -183,9 +183,10 @@ app.post('/api/register', async (req, res) => {
 
     const ticketId = uuidv4().slice(0, 8).toUpperCase();
 
-    const host = process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : `http://localhost:${process.env.PORT || 5000}`;
+    const host = process.env.APP_URL
+      || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null)
+      || (process.env.RENDER_EXTERNAL_URL)
+      || `http://localhost:${process.env.PORT || 5000}`;
 
     const ticketUrl = `${host}/ticket/${ticketId}`;
     const qrCode = await QRCode.toDataURL(ticketUrl, { width: 300, margin: 2 });
