@@ -1,0 +1,19 @@
+{
+  "totalViews": 1,
+  "dailyCounts": {
+    "2026-06-24": 1
+  },
+  "recentViews": [
+    {
+      "path": "/admin",
+      "timestamp": "2026-06-24T22:29:08.890Z",
+      "device": "desktop",
+      "browser": "Other",
+      "ipHash": "localhost",
+      "referrer": null
+    }
+  ],
+  "uniqueIpHashes": [
+    "localhost"
+  ]
+}

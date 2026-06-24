@@ -44,11 +44,51 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ============================================================
-// ANALYTICS — in-memory, no disk write per request
+// ANALYTICS — persistent, survives server restarts
 // ============================================================
-const MAX_PAGE_VIEWS = 500;
-const MAX_EVENTS    = 200;
-const analyticsStore = { pageViews: [], events: [] };
+const ANALYTICS_FILE = path.join(__dirname, 'analytics.json');
+const MAX_RECENT_VIEWS = 500;
+const MAX_EVENTS = 200;
+
+function loadAnalytics() {
+  try {
+    if (fs.existsSync(ANALYTICS_FILE)) {
+      return JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf8'));
+    }
+  } catch (e) {
+    console.warn('[Analytics] Failed to load analytics.json:', e.message);
+  }
+  return { totalViews: 0, dailyCounts: {}, recentViews: [], uniqueIpHashes: [] };
+}
+
+function saveAnalytics() {
+  try {
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify({
+      totalViews:     analyticsStore.totalViews,
+      dailyCounts:    analyticsStore.dailyCounts,
+      recentViews:    analyticsStore.recentViews,
+      uniqueIpHashes: [...analyticsStore.uniqueIpHashes]
+    }, null, 2));
+  } catch (e) {
+    console.warn('[Analytics] Failed to save analytics.json:', e.message);
+  }
+}
+
+// Load persisted data on boot
+const _saved = loadAnalytics();
+const analyticsStore = {
+  totalViews:     _saved.totalViews     || 0,
+  dailyCounts:    _saved.dailyCounts    || {},
+  recentViews:    _saved.recentViews    || [],
+  uniqueIpHashes: new Set(_saved.uniqueIpHashes || []),
+  events: []
+};
+
+// Flush to disk every 30 seconds if dirty (no disk write per-request)
+let _analyticsDirty = false;
+setInterval(() => {
+  if (_analyticsDirty) { saveAnalytics(); _analyticsDirty = false; }
+}, 30_000);
 
 function detectDevice(ua) {
   if (!ua) return 'unknown';
@@ -70,17 +110,25 @@ function hashIp(ip) {
   return crypto.createHash('md5').update(ip).digest('hex').slice(0, 10);
 }
 function trackPageView(req) {
-  const ua  = req.headers['user-agent'] || '';
-  const ip  = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '';
-  analyticsStore.pageViews.unshift({
-    path: req.path,
+  const ua      = req.headers['user-agent'] || '';
+  const ip      = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '';
+  const ipHash  = hashIp(ip);
+  const today   = new Date().toISOString().slice(0, 10);
+  const entry   = {
+    path:      req.path,
     timestamp: new Date().toISOString(),
-    device:   detectDevice(ua),
-    browser:  detectBrowser(ua),
-    ipHash:   hashIp(ip),
-    referrer: req.headers.referer || null
-  });
-  if (analyticsStore.pageViews.length > MAX_PAGE_VIEWS) analyticsStore.pageViews.pop();
+    device:    detectDevice(ua),
+    browser:   detectBrowser(ua),
+    ipHash,
+    referrer:  req.headers.referer || null
+  };
+
+  analyticsStore.totalViews++;
+  analyticsStore.dailyCounts[today] = (analyticsStore.dailyCounts[today] || 0) + 1;
+  analyticsStore.uniqueIpHashes.add(ipHash);
+  analyticsStore.recentViews.unshift(entry);
+  if (analyticsStore.recentViews.length > MAX_RECENT_VIEWS) analyticsStore.recentViews.pop();
+  _analyticsDirty = true;
 }
 function trackEvent(type, meta = {}) {
   analyticsStore.events.unshift({ type, ...meta, timestamp: new Date().toISOString() });
@@ -1068,23 +1116,23 @@ app.post('/api/admin/test-email', requireAdmin, async (req, res) => {
 
 // Analytics — admin only, never exposed publicly
 app.get('/api/admin/analytics', requireAdmin, (req, res) => {
-  const data = loadData();
-  const regs  = data.registrations;
-  const views = analyticsStore.pageViews;
-  const today = new Date().toISOString().slice(0, 10);
+  const data   = loadData();
+  const regs   = data.registrations;
+  const recent = analyticsStore.recentViews;
+  const today  = new Date().toISOString().slice(0, 10);
 
-  const uniqueIps     = new Set(views.map(v => v.ipHash)).size;
-  const todayViews    = views.filter(v => v.timestamp.startsWith(today)).length;
-  const todayUniqueIps = new Set(views.filter(v => v.timestamp.startsWith(today)).map(v => v.ipHash)).size;
+  const uniqueVisitors  = analyticsStore.uniqueIpHashes.size;
+  const todayViews      = analyticsStore.dailyCounts[today] || 0;
+  const todayUniqueIps  = new Set(recent.filter(v => v.timestamp.startsWith(today)).map(v => v.ipHash)).size;
 
-  const devices  = views.reduce((a, v) => { a[v.device]  = (a[v.device]  || 0) + 1; return a; }, {});
-  const browsers = views.reduce((a, v) => { a[v.browser] = (a[v.browser] || 0) + 1; return a; }, {});
+  const devices  = recent.reduce((a, v) => { a[v.device]  = (a[v.device]  || 0) + 1; return a; }, {});
+  const browsers = recent.reduce((a, v) => { a[v.browser] = (a[v.browser] || 0) + 1; return a; }, {});
 
-  const pathCounts = views.reduce((a, v) => { a[v.path] = (a[v.path] || 0) + 1; return a; }, {});
+  const pathCounts = recent.reduce((a, v) => { a[v.path] = (a[v.path] || 0) + 1; return a; }, {});
   const topPages   = Object.entries(pathCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([path, count]) => ({ path, count }));
 
-  const confirmedRegs = regs.filter(r => r.paymentStatus === 'confirmed').length;
-  const conversionRate = uniqueIps > 0 ? ((rgs => rgs / uniqueIps * 100)(regs.length)).toFixed(1) : '0.0';
+  const confirmedRegs  = regs.filter(r => r.paymentStatus === 'confirmed').length;
+  const conversionRate = uniqueVisitors > 0 ? (regs.length / uniqueVisitors * 100).toFixed(1) : '0.0';
 
   const recentRegs = regs.slice().sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt)).slice(0, 20).map(r => {
     const t = data.tournaments.find(t => t.id === r.tournamentId);
@@ -1093,19 +1141,19 @@ app.get('/api/admin/analytics', requireAdmin, (req, res) => {
 
   res.json({
     summary: {
-      totalPageViews:     views.length,
-      uniqueVisitors:     uniqueIps,
-      todayPageViews:     todayViews,
+      totalPageViews:      analyticsStore.totalViews,
+      uniqueVisitors,
+      todayPageViews:      todayViews,
       todayUniqueVisitors: todayUniqueIps,
-      totalRegistrations: regs.length,
+      totalRegistrations:  regs.length,
       confirmedRegistrations: confirmedRegs,
       conversionRate,
-      emailConfigured:    !!(process.env.EMAIL_USER || process.env.SMTP_USER),
+      emailConfigured:     !!(process.env.EMAIL_USER || process.env.SMTP_USER),
     },
     devices,
     browsers,
     topPages,
-    recentViews:         views.slice(0, 50),
+    recentViews:         recent.slice(0, 50),
     recentRegistrations: recentRegs,
     emailLog:            emailDeliveryLog.slice(0, 30),
     events:              analyticsStore.events.slice(0, 50),
