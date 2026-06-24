@@ -3,77 +3,215 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>East Arena Gaming Tournament</title>
-  <link rel="icon" href="/favicon.svg" />
+  <title>East Arena Gaming — Premium Tournament Platform</title>
+  <meta name="description" content="East Arena Gaming: Nigeria's premier tournament platform for FIFA, Call of Duty, Mortal Kombat and more. Register now and compete for real prize money.">
+  <meta name="keywords" content="East Arena Gaming, FIFA tournament Nigeria, gaming tournament, esports Nigeria, Call of Duty, Mortal Kombat">
+  <meta property="og:title" content="East Arena Gaming Tournament">
+  <meta property="og:description" content="Nigeria's premier multi-game tournament platform. Register and compete for real prizes.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #0F1419; color: #fff; font-family: system-ui, sans-serif; }
-    .gold { color: #D4AF37; }
-    .teal { color: #00D9FF; }
+    * { box-sizing: border-box; }
+    body { background: #0A0E14; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
     input, select, textarea { color-scheme: dark; }
-    .game-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.04em; text-transform:uppercase; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(245,158,11,0.3); }
+      50%       { box-shadow: 0 0 40px rgba(245,158,11,0.6); }
+    }
+    @keyframes scanline {
+      0%   { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      92%       { opacity: 1; }
+      93%       { opacity: 0.85; }
+      94%       { opacity: 1; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-8px); }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes countUp {
+      from { opacity: 0; transform: scale(0.8); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .fade-in-up   { animation: fadeInUp 0.6s ease forwards; }
+    .pulse-glow   { animation: pulse-glow 2s ease-in-out infinite; }
+    .float-anim   { animation: float 3s ease-in-out infinite; }
+    .flicker      { animation: flicker 8s infinite; }
+    .count-in     { animation: countUp 0.5s ease forwards; }
+
+    .hero-bg {
+      background: radial-gradient(ellipse at 20% 50%, rgba(245,158,11,0.12) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 20%, rgba(0,217,255,0.08) 0%, transparent 50%),
+                  linear-gradient(180deg, #0A0E14 0%, #0F1419 50%, #0A0E14 100%);
+    }
+    .card-hover {
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(245,158,11,0.15);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0A0E14;
+      font-weight: 900;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.4s ease;
+    }
+    .btn-primary:hover::after { left: 100%; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.4); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .game-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; padding:3px 10px; border-radius:6px; letter-spacing:.06em; text-transform:uppercase; }
+    .grid-bg {
+      background-image: linear-gradient(rgba(245,158,11,0.04) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(245,158,11,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .shimmer-text {
+      background: linear-gradient(90deg, #f59e0b 0%, #fcd34d 50%, #f59e0b 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+      transition: width 1s ease;
+      border-radius: 99px;
+    }
+    .loading-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(245,158,11,0.2);
+      border-top-color: #f59e0b;
+      border-radius: 50%;
+      animation: spin-slow 0.8s linear infinite;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0A0E14; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
-const { useState, useEffect, createElement: h } = React;
+const { useState, useEffect, useRef, createElement: h } = React;
 
-// ─── Helpers ──────────────────────────────────────────────────────────
 function fmt(n) { return Number(n).toLocaleString(); }
 function fmtDate(d) { return new Date(d).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' }); }
+function fmtDateLong(d) { return new Date(d).toLocaleDateString('en-NG', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
 
 const GAME_CONFIG = {
-  'FIFA':       { icon: '⚽', color: 'bg-blue-600/30 text-blue-300' },
-  'CODM':       { icon: '🔫', color: 'bg-red-600/30 text-red-300' },
-  'Free Fire':  { icon: '🔥', color: 'bg-orange-600/30 text-orange-300' },
-  'PUBG':       { icon: '🎯', color: 'bg-yellow-600/30 text-yellow-300' },
-  'default':    { icon: '🎮', color: 'bg-slate-600/50 text-slate-300' },
+  'FIFA':          { icon: '⚽', color: 'bg-blue-600/30 text-blue-300 border border-blue-500/30', label: 'FIFA' },
+  'CODM':          { icon: '🔫', color: 'bg-red-600/30 text-red-300 border border-red-500/30', label: 'Call of Duty' },
+  'Mortal Kombat': { icon: '🥊', color: 'bg-purple-600/30 text-purple-300 border border-purple-500/30', label: 'Mortal Kombat' },
+  'Casual':        { icon: '🎮', color: 'bg-teal-600/30 text-teal-300 border border-teal-500/30', label: 'Casual' },
+  'Free Fire':     { icon: '🔥', color: 'bg-orange-600/30 text-orange-300 border border-orange-500/30', label: 'Free Fire' },
+  'PUBG':          { icon: '🎯', color: 'bg-yellow-600/30 text-yellow-300 border border-yellow-500/30', label: 'PUBG' },
+  'default':       { icon: '🎮', color: 'bg-slate-600/50 text-slate-300 border border-slate-500/30', label: 'Gaming' },
 };
 function gameStyle(game) { return GAME_CONFIG[game] || GAME_CONFIG.default; }
 
 function Badge({ status }) {
   const cfg = {
-    confirmed: ['bg-green-600', '✓ Confirmed'],
-    pending:   ['bg-yellow-500 text-slate-900', '⏳ Pending'],
-    rejected:  ['bg-red-600', '✗ Rejected'],
+    confirmed: ['bg-green-500/20 text-green-400 border border-green-500/30', '✓ Confirmed'],
+    pending:   ['bg-yellow-500/20 text-yellow-300 border border-yellow-500/30', '⏳ Pending'],
+    rejected:  ['bg-red-500/20 text-red-400 border border-red-500/30', '✗ Rejected'],
   };
-  const [cls, label] = cfg[status] || ['bg-slate-600', status];
-  return h('span', { className: `px-2 py-0.5 rounded text-xs font-bold ${cls}` }, label);
+  const [cls, label] = cfg[status] || ['bg-slate-600/50 text-slate-300', status];
+  return h('span', { className: `px-2.5 py-0.5 rounded-full text-xs font-bold ${cls}` }, label);
 }
 
-function Input({ label, ...props }) {
+function Input({ label, icon, ...props }) {
   return h('div', null,
-    label && h('label', { className: 'block text-slate-400 text-xs uppercase mb-1' }, label),
+    label && h('label', { className: 'block text-slate-400 text-xs font-semibold uppercase tracking-wide mb-1.5' },
+      icon && h('span', { className: 'mr-1' }, icon), label),
     h('input', {
-      className: 'w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none',
+      className: 'w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 transition-all duration-200',
       ...props
     })
+  );
+}
+
+function LoadingScreen() {
+  return h('div', { className: 'fixed inset-0 bg-[#0A0E14] flex flex-col items-center justify-center z-50' },
+    h('div', { className: 'text-center' },
+      h('div', { className: 'text-6xl mb-6 float-anim' }, '🏆'),
+      h('h1', { className: 'text-2xl font-black text-amber-400 mb-2 shimmer-text' }, 'EAST ARENA'),
+      h('p', { className: 'text-slate-500 text-sm mb-8' }, 'Gaming Tournament Platform'),
+      h('div', { className: 'loading-spinner mx-auto' })
+    )
   );
 }
 
 // ─── Nav ───────────────────────────────────────────────────────────────
 function Nav({ page, setPage }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  return h('nav', { className: 'bg-slate-900 border-b border-amber-500/20 px-4 py-3 sticky top-0 z-50' },
-    h('div', { className: 'max-w-5xl mx-auto flex justify-between items-center' },
-      h('button', { onClick: () => { setPage('home'); setMenuOpen(false); }, className: 'flex flex-col leading-tight' },
-        h('span', { className: 'text-xl font-black text-amber-400 tracking-tight' }, '🏆 EAST ARENA'),
-        h('span', { className: 'text-xs text-slate-400 font-medium -mt-0.5' }, 'Gaming Tournament')
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return h('nav', { className: `sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0A0E14]/95 backdrop-blur-md border-b border-amber-500/20 shadow-lg shadow-black/50' : 'bg-transparent'}` },
+    h('div', { className: 'max-w-6xl mx-auto px-4 py-3 flex justify-between items-center' },
+      h('button', { onClick: () => { setPage('home'); setMenuOpen(false); }, className: 'flex items-center gap-3' },
+        h('div', { className: 'flex flex-col leading-tight' },
+          h('span', { className: 'text-xl font-black text-amber-400 tracking-tight flicker' }, '🏆 EAST ARENA'),
+          h('span', { className: 'text-[10px] text-slate-500 font-semibold uppercase tracking-widest -mt-0.5' }, 'Gaming Tournament')
+        )
       ),
-      h('div', { className: 'hidden sm:flex gap-2 items-center' },
-        h('button', { onClick: () => setPage('lookup'), className: 'px-3 py-2 text-sm text-slate-300 hover:text-amber-400 transition' }, 'My Ticket'),
-        h('button', { onClick: () => setPage('home'), className: 'px-3 py-2 text-sm text-slate-300 hover:text-amber-400 transition' }, 'Home'),
-        h('button', { onClick: () => setPage('register'), className: 'px-4 py-2 bg-amber-500 text-black rounded-lg font-bold text-sm hover:bg-amber-400 transition' }, 'Register Now')
+      h('div', { className: 'hidden sm:flex gap-1 items-center' },
+        h('button', { onClick: () => setPage('home'), className: `px-3 py-2 text-sm font-medium transition-colors ${page==='home' ? 'text-amber-400' : 'text-slate-400 hover:text-white'}` }, 'Home'),
+        h('button', { onClick: () => setPage('lookup'), className: `px-3 py-2 text-sm font-medium transition-colors ${page==='lookup' ? 'text-amber-400' : 'text-slate-400 hover:text-white'}` }, 'My Ticket'),
+        h('a', { href: '/dashboard', className: 'px-3 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors' }, 'Dashboard'),
+        h('button', { onClick: () => setPage('register'), className: 'ml-2 px-5 py-2 btn-primary rounded-xl text-sm font-black' }, '⚡ Register Now')
       ),
-      h('button', { onClick: () => setMenuOpen(!menuOpen), className: 'sm:hidden p-2 text-slate-400' }, menuOpen ? '✕' : '☰')
+      h('button', { onClick: () => setMenuOpen(!menuOpen), className: 'sm:hidden p-2 text-slate-400 hover:text-white transition-colors' }, menuOpen ? '✕' : '☰')
     ),
-    menuOpen && h('div', { className: 'sm:hidden bg-slate-900 border-t border-slate-800 px-4 py-3 space-y-2' },
-      h('button', { onClick: () => { setPage('home'); setMenuOpen(false); }, className: 'block w-full text-left py-2 text-slate-300' }, 'Home'),
-      h('button', { onClick: () => { setPage('lookup'); setMenuOpen(false); }, className: 'block w-full text-left py-2 text-slate-300' }, 'My Ticket'),
-      h('button', { onClick: () => { setPage('register'); setMenuOpen(false); }, className: 'block w-full py-2 mt-1 bg-amber-500 text-black font-bold rounded-lg' }, 'Register Now')
+    menuOpen && h('div', { className: 'sm:hidden bg-[#0A0E14]/98 border-t border-slate-800 px-4 py-3 space-y-1' },
+      h('button', { onClick: () => { setPage('home'); setMenuOpen(false); }, className: 'block w-full text-left px-3 py-2.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800/50' }, '🏠 Home'),
+      h('button', { onClick: () => { setPage('lookup'); setMenuOpen(false); }, className: 'block w-full text-left px-3 py-2.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800/50' }, '🎫 My Ticket'),
+      h('a', { href: '/dashboard', className: 'block w-full text-left px-3 py-2.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800/50' }, '📋 Dashboard'),
+      h('button', { onClick: () => { setPage('register'); setMenuOpen(false); }, className: 'block w-full px-3 py-2.5 mt-2 btn-primary rounded-xl font-black text-sm' }, '⚡ Register Now')
     )
   );
 }
@@ -81,133 +219,194 @@ function Nav({ page, setPage }) {
 // ─── Home Page ────────────────────────────────────────────────────────
 function HomePage({ setPage }) {
   const [tournaments, setTournaments] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/tournaments')
-      .then(r => r.json())
-      .then(data => { setTournaments(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch('/api/tournaments').then(r => r.json()).catch(() => []),
+      fetch('/api/announcements').then(r => r.json()).catch(() => [])
+    ]).then(([t, a]) => {
+      setTournaments(Array.isArray(t) ? t : []);
+      setAnnouncements(Array.isArray(a) ? a : []);
+      setLoading(false);
+    });
   }, []);
 
-  // Coming-soon games
-  const comingSoon = [
-    { name: 'Call of Duty Mobile', icon: '🔫', status: 'Coming Soon' },
-    { name: 'Free Fire',           icon: '🔥', status: 'Coming Soon' },
-    { name: 'PUBG Mobile',         icon: '🎯', status: 'Coming Soon' },
-    { name: 'eFootball',           icon: '⚽', status: 'Coming Soon' },
+  const freeGames = [
+    { name: 'Call of Duty', icon: '🔫', color: 'from-red-900/40 to-red-800/20 border-red-700/30', status: 'Open' },
+    { name: 'Mortal Kombat', icon: '🥊', color: 'from-purple-900/40 to-purple-800/20 border-purple-700/30', status: 'Open' },
+    { name: 'Casual Sessions', icon: '🎮', color: 'from-teal-900/40 to-teal-800/20 border-teal-700/30', status: 'Open' },
   ];
 
-  return h('div', { className: 'space-y-12' },
+  return h('div', { className: 'space-y-16' },
+
+    // ── Announcements ──────────────────────────────────────────────────
+    announcements.length > 0 && h('div', { className: 'space-y-2' },
+      ...announcements.slice(0, 3).map(a => {
+        const colors = { info: 'bg-blue-500/10 border-blue-500/30 text-blue-300', warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300', success: 'bg-green-500/10 border-green-500/30 text-green-300', error: 'bg-red-500/10 border-red-500/30 text-red-300' };
+        const icons = { info: 'ℹ️', warning: '⚠️', success: '✅', error: '❌' };
+        return h('div', { key: a.id, className: `border rounded-xl px-4 py-3 text-sm ${colors[a.type] || colors.info}` },
+          h('span', { className: 'font-bold' }, icons[a.type] + ' ' + a.title + ': '),
+          a.message
+        );
+      })
+    ),
 
     // ── Hero ──────────────────────────────────────────────────────────
-    h('div', { className: 'relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-8 sm:p-12 overflow-hidden border border-amber-500/20' },
-      h('div', { className: 'absolute inset-0 bg-gradient-to-r from-amber-600/10 to-transparent pointer-events-none' }),
-      h('div', { className: 'relative text-center' },
-        h('div', { className: 'inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-1 text-amber-400 text-xs font-bold uppercase tracking-widest mb-5' },
-          h('span', null, '🎮'), 'Competitive Gaming Nigeria'
+    h('div', { className: 'relative hero-bg grid-bg rounded-2xl p-8 sm:p-14 overflow-hidden border border-amber-500/10' },
+      h('div', { className: 'absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent' }),
+      h('div', { className: 'absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent' }),
+      h('div', { className: 'relative text-center fade-in-up' },
+        h('div', { className: 'inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5 text-amber-400 text-xs font-bold uppercase tracking-widest mb-6' },
+          h('span', { className: 'w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block' }),
+          'Live Tournament Platform · Nigeria'
         ),
-        h('h1', { className: 'text-4xl sm:text-6xl font-black text-white mb-3 leading-tight' },
-          'EAST ARENA', h('br'), h('span', { className: 'text-amber-400' }, 'GAMING TOURNAMENT')
+        h('h1', { className: 'text-5xl sm:text-7xl font-black text-white mb-3 leading-[0.9]' },
+          h('span', { className: 'shimmer-text' }, 'EAST ARENA'),
+          h('br'),
+          h('span', { className: 'text-2xl sm:text-3xl text-slate-300 font-semibold tracking-wider' }, 'GAMING TOURNAMENT')
         ),
-        h('p', { className: 'text-slate-300 text-lg sm:text-xl mb-2 max-w-xl mx-auto' },
+        h('p', { className: 'text-slate-400 text-base sm:text-lg mb-3 max-w-lg mx-auto mt-5' },
           "Africa's Premier Multi-Game Tournament Platform"
         ),
-        h('p', { className: 'text-slate-500 text-sm mb-8' }, 'FIFA · Call of Duty Mobile · Free Fire · More Games Coming'),
-        h('div', { className: 'flex flex-col sm:flex-row justify-center gap-3' },
-          h('button', { onClick: () => setPage('register'), className: 'px-8 py-3 bg-amber-500 text-slate-900 font-black rounded-xl hover:bg-amber-400 transition text-lg shadow-lg shadow-amber-500/20' }, '🏆 JOIN A TOURNAMENT'),
-          h('button', { onClick: () => setPage('lookup'), className: 'px-6 py-3 bg-slate-700 text-white font-bold rounded-xl hover:bg-slate-600 transition border border-slate-600' }, '🔍 Find My Ticket')
+        h('p', { className: 'text-slate-600 text-sm mb-10' }, '⚽ FIFA · 🔫 Call of Duty · 🥊 Mortal Kombat · 🎮 Casual Gaming'),
+        h('div', { className: 'flex flex-col sm:flex-row justify-center gap-4' },
+          h('button', { onClick: () => setPage('register'), className: 'px-8 py-3.5 btn-primary rounded-xl font-black text-base pulse-glow' }, '🏆 JOIN A TOURNAMENT'),
+          h('button', { onClick: () => setPage('lookup'), className: 'px-7 py-3.5 bg-slate-800/80 text-white font-bold rounded-xl hover:bg-slate-700/80 transition border border-slate-700 text-base' }, '🔍 Find My Ticket')
         )
       )
     ),
 
     // ── Active Tournaments ────────────────────────────────────────────
     h('div', null,
-      h('div', { className: 'flex justify-between items-center mb-5' },
-        h('h2', { className: 'text-2xl font-black text-amber-400' }, '🏅 ACTIVE TOURNAMENTS'),
-        h('span', { className: 'text-slate-500 text-xs' }, 'Season 1')
+      h('div', { className: 'flex justify-between items-center mb-6' },
+        h('div', null,
+          h('h2', { className: 'text-2xl font-black text-white' }, '🏅 ACTIVE TOURNAMENTS'),
+          h('p', { className: 'text-slate-500 text-sm mt-0.5' }, 'Register now to secure your spot')
+        ),
+        h('div', { className: 'text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3 py-1.5 rounded-full font-bold' }, 'Season 1')
       ),
       loading
-        ? h('p', { className: 'text-slate-400' }, 'Loading...')
+        ? h('div', { className: 'flex justify-center py-16' }, h('div', { className: 'loading-spinner' }))
         : tournaments.length === 0
-          ? h('div', { className: 'bg-slate-800 border border-slate-700 rounded-xl p-10 text-center text-slate-400' },
-              h('div', { className: 'text-4xl mb-3' }, '🎮'),
-              'No active tournaments at the moment. Check back soon.'
+          ? h('div', { className: 'bg-slate-900/50 border border-slate-800 rounded-2xl p-14 text-center' },
+              h('div', { className: 'text-5xl mb-4 float-anim' }, '🎮'),
+              h('p', { className: 'text-slate-400 font-semibold mb-1' }, 'No active tournaments right now'),
+              h('p', { className: 'text-slate-600 text-sm' }, 'Check back soon — new tournaments are added regularly')
             )
-          : h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-5' },
-              ...tournaments.map(t => {
+          : h('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-5' },
+              ...tournaments.map((t, i) => {
                 const gs = gameStyle(t.game);
-                const isFull = t.registrations.length >= t.maxPlayers;
-                return h('div', { key: t.id, className: 'bg-slate-800 border border-amber-500/20 rounded-xl p-6 hover:border-amber-400/50 transition flex flex-col' },
-                  h('div', { className: 'flex justify-between items-start mb-3' },
-                    h('div', null,
-                      t.game && h('span', { className: `game-badge ${gs.color} mb-2 inline-block` }, gs.icon + ' ' + t.game),
-                      h('h3', { className: 'text-lg font-bold text-white leading-tight' }, t.name)
+                const regCount = typeof t.registrations === 'number' ? t.registrations : t.registrations.length;
+                const isFull = regCount >= t.maxPlayers;
+                const isFree = t.entryFee === 0;
+                const fillPct = Math.min(100, (regCount / t.maxPlayers) * 100);
+                return h('div', { key: t.id, className: `bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden card-hover flex flex-col fade-in-up`, style: { animationDelay: `${i * 0.1}s` } },
+                  h('div', { className: 'h-1 w-full', style: { background: isFree ? 'linear-gradient(90deg,#0d9488,#14b8a6)' : 'linear-gradient(90deg,#d97706,#f59e0b)' } }),
+                  h('div', { className: 'p-6 flex flex-col flex-1' },
+                    h('div', { className: 'flex justify-between items-start mb-4' },
+                      h('div', null,
+                        h('span', { className: `game-badge ${gs.color} mb-2 inline-block` }, gs.icon + ' ' + t.game),
+                        h('h3', { className: 'text-lg font-black text-white leading-tight' }, t.name)
+                      ),
+                      isFull
+                        ? h('span', { className: 'text-xs px-2.5 py-1 rounded-full font-bold bg-red-500/20 text-red-400 border border-red-500/20' }, 'FULL')
+                        : h('span', { className: `text-xs px-2.5 py-1 rounded-full font-bold ${isFree ? 'bg-teal-500/20 text-teal-400 border border-teal-500/20' : 'bg-green-500/20 text-green-400 border border-green-500/20'}` },
+                            isFree ? 'FREE' : t.status.toUpperCase())
                     ),
-                    h('span', { className: `text-xs px-2 py-1 rounded font-bold ${isFull ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}` }, isFull ? 'FULL' : t.status.toUpperCase())
-                  ),
-                  h('div', { className: 'space-y-1.5 text-sm mb-4 flex-1' },
-                    h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Entry Fee'), h('span', { className: 'font-bold teal' }, '₦' + fmt(t.entryFee))),
-                    h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Total Prize'), h('span', { className: 'font-bold text-green-400' }, '₦' + fmt(t.prizePool.first + t.prizePool.second + t.prizePool.third))),
-                    h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Date'), h('span', { className: 'text-white' }, fmtDate(t.date))),
-                    h('div', { className: 'flex justify-between items-center' },
-                      h('span', { className: 'text-slate-400' }, 'Slots'),
-                      h('span', { className: 'text-white' }, t.registrations.length + ' / ' + t.maxPlayers + ' ',
-                        h('span', { className: 'text-slate-500 text-xs' }, 'registered')
+                    h('div', { className: 'space-y-2 text-sm mb-4 flex-1' },
+                      h('div', { className: 'flex justify-between items-center' },
+                        h('span', { className: 'text-slate-400' }, 'Entry Fee'),
+                        h('span', { className: `font-black text-base ${isFree ? 'text-teal-400' : 'text-amber-400'}` }, isFree ? 'FREE' : '₦' + fmt(t.entryFee))
+                      ),
+                      !isFree && h('div', { className: 'flex justify-between' },
+                        h('span', { className: 'text-slate-400' }, 'Total Prize'),
+                        h('span', { className: 'font-bold text-green-400' }, '₦' + fmt(t.prizePool.first + t.prizePool.second + t.prizePool.third))
+                      ),
+                      h('div', { className: 'flex justify-between' },
+                        h('span', { className: 'text-slate-400' }, 'Date'),
+                        h('span', { className: 'text-white font-semibold' }, fmtDate(t.date))
+                      ),
+                      h('div', { className: 'flex justify-between items-center' },
+                        h('span', { className: 'text-slate-400' }, 'Slots'),
+                        h('span', { className: `font-bold ${isFull ? 'text-red-400' : 'text-white'}` }, regCount + ' / ' + t.maxPlayers)
                       )
-                    )
-                  ),
-                  h('div', { className: 'w-full bg-slate-700 rounded-full h-1.5 mb-4' },
-                    h('div', { className: 'bg-amber-500 h-1.5 rounded-full transition-all', style: { width: Math.min(100, (t.registrations.length / t.maxPlayers) * 100) + '%' } })
-                  ),
-                  h('div', { className: 'grid grid-cols-3 gap-2 text-xs text-center mb-4' },
-                    h('div', { className: 'bg-yellow-500/10 rounded-lg p-2' }, h('div', { className: 'text-yellow-400 font-bold' }, '🥇 ₦' + fmt(t.prizePool.first)), h('div', { className: 'text-slate-500' }, '1st Place')),
-                    h('div', { className: 'bg-slate-600/30 rounded-lg p-2' }, h('div', { className: 'text-slate-300 font-bold' }, '🥈 ₦' + fmt(t.prizePool.second)), h('div', { className: 'text-slate-500' }, '2nd Place')),
-                    h('div', { className: 'bg-orange-500/10 rounded-lg p-2' }, h('div', { className: 'text-orange-400 font-bold' }, '🥉 ₦' + fmt(t.prizePool.third)), h('div', { className: 'text-slate-500' }, '3rd Place'))
-                  ),
-                  isFull
-                    ? h('div', { className: 'w-full text-center py-2.5 bg-slate-700 text-slate-500 rounded-lg font-bold text-sm' }, 'TOURNAMENT FULL')
-                    : h('button', { onClick: () => setPage('register'), className: 'w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2.5 rounded-lg transition' }, 'REGISTER NOW →')
+                    ),
+                    h('div', { className: 'w-full bg-slate-800 rounded-full h-1 mb-4' },
+                      h('div', { className: 'progress-bar h-1', style: { width: fillPct + '%', background: isFree ? 'linear-gradient(90deg,#0d9488,#14b8a6)' : undefined } })
+                    ),
+                    !isFree && h('div', { className: 'grid grid-cols-3 gap-2 text-xs text-center mb-4' },
+                      h('div', { className: 'bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-2.5' },
+                        h('div', { className: 'text-yellow-400 font-bold text-sm' }, '🥇 ₦' + fmt(t.prizePool.first)),
+                        h('div', { className: 'text-slate-500 mt-0.5' }, '1st Place')
+                      ),
+                      h('div', { className: 'bg-slate-700/30 border border-slate-700/50 rounded-xl p-2.5' },
+                        h('div', { className: 'text-slate-300 font-bold text-sm' }, '🥈 ₦' + fmt(t.prizePool.second)),
+                        h('div', { className: 'text-slate-500 mt-0.5' }, '2nd Place')
+                      ),
+                      h('div', { className: 'bg-orange-500/10 border border-orange-500/20 rounded-xl p-2.5' },
+                        h('div', { className: 'text-orange-400 font-bold text-sm' }, '🥉 ₦' + fmt(t.prizePool.third)),
+                        h('div', { className: 'text-slate-500 mt-0.5' }, '3rd Place')
+                      )
+                    ),
+                    isFull
+                      ? h('div', { className: 'w-full text-center py-3 bg-slate-800/50 text-slate-500 rounded-xl font-bold text-sm border border-slate-700/50' }, '🚫 Tournament Full')
+                      : h('button', { onClick: () => setPage('register'), className: `w-full py-3 btn-primary rounded-xl font-black text-sm ${isFree ? 'from-teal-600 to-teal-500' : ''}` },
+                          isFree ? '🎮 JOIN FREE SESSION →' : '🏆 REGISTER NOW →')
+                  )
                 );
               })
             )
     ),
 
-    // ── Coming Soon Games ─────────────────────────────────────────────
+    // ── Free Activities ────────────────────────────────────────────────
     h('div', null,
-      h('div', { className: 'flex items-center gap-3 mb-5' },
-        h('h2', { className: 'text-2xl font-black text-white' }, 'MORE GAMES COMING SOON'),
-        h('span', { className: 'bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-1 rounded' }, '2025')
+      h('div', { className: 'mb-6' },
+        h('h2', { className: 'text-2xl font-black text-white mb-1' }, '🎮 FREE GAMING SESSIONS'),
+        h('p', { className: 'text-slate-500 text-sm' }, 'No entry fee required — just register and show up')
       ),
-      h('div', { className: 'grid grid-cols-2 sm:grid-cols-4 gap-4' },
-        ...comingSoon.map(g =>
-          h('div', { key: g.name, className: 'bg-slate-800/50 border border-slate-700 rounded-xl p-5 text-center opacity-70 hover:opacity-90 transition' },
-            h('div', { className: 'text-3xl mb-2' }, g.icon),
-            h('div', { className: 'font-bold text-white text-sm mb-1' }, g.name),
-            h('div', { className: 'text-xs bg-slate-700 text-slate-400 rounded-full px-3 py-1 inline-block' }, g.status)
+      h('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4' },
+        ...freeGames.map(g =>
+          h('div', { key: g.name, className: `bg-gradient-to-br ${g.color} border rounded-2xl p-6 card-hover` },
+            h('div', { className: 'text-4xl mb-3 float-anim' }, g.icon),
+            h('div', { className: 'font-black text-white text-lg mb-1' }, g.name),
+            h('div', { className: 'flex items-center gap-2 mb-4' },
+              h('span', { className: 'w-2 h-2 bg-green-400 rounded-full animate-pulse inline-block' }),
+              h('span', { className: 'text-xs text-green-400 font-bold uppercase tracking-wide' }, 'Free · Open')
+            ),
+            h('button', { onClick: () => setPage('register'), className: 'w-full py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-sm transition border border-white/10' }, 'Register Free →')
           )
         )
       )
     ),
 
     // ── How It Works ──────────────────────────────────────────────────
-    h('div', { className: 'bg-slate-800/50 border border-slate-700 rounded-2xl p-6 sm:p-8' },
-      h('h2', { className: 'text-xl font-black text-white mb-6 text-center' }, 'HOW IT WORKS'),
-      h('div', { className: 'grid grid-cols-1 sm:grid-cols-4 gap-6 text-center' },
+    h('div', { className: 'bg-slate-900/50 border border-slate-800 rounded-2xl p-6 sm:p-10' },
+      h('h2', { className: 'text-2xl font-black text-white mb-8 text-center' }, 'HOW IT WORKS'),
+      h('div', { className: 'grid grid-cols-1 sm:grid-cols-4 gap-6' },
         ...[
-          { step: '1', icon: '📋', title: 'Register', desc: 'Fill in your details and pick a tournament' },
-          { step: '2', icon: '💳', title: 'Pay Entry Fee', desc: 'Bank transfer to our account' },
-          { step: '3', icon: '✅', title: 'Get Confirmed', desc: 'Admin approves your payment' },
-          { step: '4', icon: '🎮', title: 'Compete', desc: 'Show your QR ticket and play' },
-        ].map(s =>
-          h('div', { key: s.step, className: 'flex flex-col items-center' },
-            h('div', { className: 'w-10 h-10 rounded-full bg-amber-500 text-slate-900 font-black flex items-center justify-center text-lg mb-2' }, s.step),
-            h('div', { className: 'text-2xl mb-1' }, s.icon),
-            h('div', { className: 'font-bold text-white mb-1' }, s.title),
-            h('div', { className: 'text-slate-400 text-xs' }, s.desc)
+          { step: '01', icon: '📋', title: 'Register', desc: 'Fill in your details, pick a tournament' },
+          { step: '02', icon: '💳', title: 'Pay Fee', desc: 'Bank transfer for paid events (free events auto-confirm)' },
+          { step: '03', icon: '✅', title: 'Get Confirmed', desc: 'Receive ticket & QR code to your email' },
+          { step: '04', icon: '🏆', title: 'Compete', desc: 'Show your QR ticket and play for prizes' },
+        ].map((s, i) =>
+          h('div', { key: s.step, className: 'text-center relative' },
+            i < 3 && h('div', { className: 'hidden sm:block absolute top-7 left-[60%] w-full h-px bg-gradient-to-r from-amber-500/30 to-transparent' }),
+            h('div', { className: 'w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-black mx-auto mb-3' }, s.step),
+            h('div', { className: 'text-3xl mb-2' }, s.icon),
+            h('div', { className: 'font-black text-white mb-1.5' }, s.title),
+            h('div', { className: 'text-slate-500 text-xs leading-relaxed' }, s.desc)
           )
         )
       )
+    ),
+
+    // ── Footer ────────────────────────────────────────────────────────
+    h('div', { className: 'border-t border-slate-800 pt-8 pb-4 text-center' },
+      h('div', { className: 'text-amber-400 font-black text-lg mb-2' }, '🏆 EAST ARENA GAMING'),
+      h('p', { className: 'text-slate-600 text-xs' }, 'Nigeria\'s Premier Gaming Tournament Platform · Season 1 · 2026'),
+      h('p', { className: 'text-slate-700 text-xs mt-1' }, 'FIFA · Call of Duty · Mortal Kombat · Casual Gaming')
     )
   );
 }
@@ -215,18 +414,16 @@ function HomePage({ setPage }) {
 // ─── Register Page ────────────────────────────────────────────────────
 function RegisterPage({ setPage, setRegistrationResult }) {
   const [tournaments, setTournaments] = useState([]);
-  const [form, setForm] = useState({ playerName: '', gamertag: '', phone: '', location: '', tournamentId: '' });
+  const [form, setForm] = useState({ playerName: '', gamertag: '', phone: '', email: '', location: '', tournamentId: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/tournaments')
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data) ? data : [];
-        setTournaments(list);
-        if (list.length > 0) setForm(f => ({ ...f, tournamentId: list[0].id }));
-      });
+    fetch('/api/tournaments').then(r => r.json()).then(data => {
+      const list = Array.isArray(data) ? data : [];
+      setTournaments(list);
+      if (list.length > 0) setForm(f => ({ ...f, tournamentId: list[0].id }));
+    });
   }, []);
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -244,61 +441,94 @@ function RegisterPage({ setPage, setRegistrationResult }) {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Registration failed'); setLoading(false); return; }
       setRegistrationResult(data);
-      setPage('payment');
-    } catch {
-      setError('Network error. Please try again.');
-    }
+      setPage(data.isFree ? 'success' : 'payment');
+    } catch { setError('Network error. Please try again.'); }
     setLoading(false);
   };
 
-  const selTournament = tournaments.find(t => String(t.id) === String(form.tournamentId));
-  const gs = selTournament?.game ? gameStyle(selTournament.game) : null;
+  const selT = tournaments.find(t => String(t.id) === String(form.tournamentId));
+  const gs = selT?.game ? gameStyle(selT.game) : null;
+  const isFree = selT?.entryFee === 0;
 
   return h('div', { className: 'max-w-xl mx-auto' },
-    h('button', { onClick: () => setPage('home'), className: 'text-amber-400 text-sm mb-5 hover:underline flex items-center gap-1' }, '← Back to Home'),
+    h('button', { onClick: () => setPage('home'), className: 'text-amber-400 text-sm mb-6 hover:underline flex items-center gap-1.5 font-medium' }, '← Back to Home'),
     h('h2', { className: 'text-3xl font-black text-amber-400 mb-1' }, 'TOURNAMENT REGISTRATION'),
-    h('p', { className: 'text-slate-400 text-sm mb-6' }, 'East Arena Gaming Tournament — Season 1'),
-    error && h('div', { className: 'bg-red-500/20 border border-red-500 text-red-300 rounded-lg p-3 mb-4 text-sm' }, '⚠ ' + error),
+    h('p', { className: 'text-slate-500 text-sm mb-6' }, 'East Arena Gaming Tournament · Season 1'),
 
-    selTournament && h('div', { className: 'bg-slate-800 border border-amber-500/30 rounded-xl p-4 mb-5' },
+    error && h('div', { className: 'bg-red-500/10 border border-red-500/40 text-red-300 rounded-xl p-4 mb-5 text-sm flex gap-2' },
+      h('span', null, '⚠'), h('span', null, error)
+    ),
+
+    selT && h('div', { className: `bg-slate-900/80 border rounded-xl p-4 mb-5 ${isFree ? 'border-teal-500/30' : 'border-amber-500/20'}` },
       h('div', { className: 'flex justify-between items-start' },
         h('div', null,
-          gs && h('span', { className: `game-badge ${gs.color} mb-1 inline-block` }, gs.icon + ' ' + selTournament.game),
-          h('div', { className: 'font-bold text-white' }, selTournament.name),
-          h('div', { className: 'text-slate-400 text-xs mt-1' }, fmtDate(selTournament.date) + ' · ' + selTournament.registrations.length + '/' + selTournament.maxPlayers + ' registered')
+          gs && h('span', { className: `game-badge ${gs.color} mb-1.5 inline-block` }, gs.icon + ' ' + selT.game),
+          h('div', { className: 'font-black text-white' }, selT.name),
+          h('div', { className: 'text-slate-500 text-xs mt-1' },
+            fmtDate(selT.date) + ' · ' + (typeof selT.registrations === 'number' ? selT.registrations : selT.registrations.length) + '/' + selT.maxPlayers + ' registered'
+          )
         ),
         h('div', { className: 'text-right' },
-          h('div', { className: 'text-amber-400 font-black text-lg' }, '₦' + fmt(selTournament.entryFee)),
-          h('div', { className: 'text-slate-500 text-xs' }, 'entry fee')
+          h('div', { className: `font-black text-xl ${isFree ? 'text-teal-400' : 'text-amber-400'}` }, isFree ? 'FREE' : '₦' + fmt(selT.entryFee)),
+          h('div', { className: 'text-slate-500 text-xs' }, isFree ? 'no fee' : 'entry fee')
         )
       )
     ),
 
-    h('form', { onSubmit: submit, className: 'bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-4' },
+    h('form', { onSubmit: submit, className: 'bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-4' },
       h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-4' },
-        h(Input, { label: 'Full Name', type: 'text', placeholder: 'Your full name', required: true, value: form.playerName, onChange: set('playerName'), autoComplete: 'name' }),
-        h(Input, { label: 'In-Game Tag / Username', type: 'text', placeholder: 'Your in-game name', required: true, value: form.gamertag, onChange: set('gamertag'), autoComplete: 'off' }),
-        h(Input, { label: 'Phone Number', type: 'tel', placeholder: '0803...', required: true, value: form.phone, onChange: set('phone'), autoComplete: 'tel' }),
-        h(Input, { label: 'City / Location', type: 'text', placeholder: 'Lagos, Abuja, PH...', required: true, value: form.location, onChange: set('location') })
-      ),
-      h('div', null,
-        h('label', { className: 'block text-slate-400 text-xs uppercase mb-1' }, 'Select Tournament'),
-        h('select', {
-          value: form.tournamentId,
-          onChange: set('tournamentId'),
-          required: true,
-          className: 'w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none'
-        },
-          tournaments.map(t => h('option', { key: t.id, value: t.id }, (t.game ? '[' + t.game + '] ' : '') + t.name + ' — ₦' + fmt(t.entryFee)))
+        h(Input, { label: 'Full Name', icon: '👤', type: 'text', placeholder: 'Your full legal name', required: true, value: form.playerName, onChange: set('playerName'), autoComplete: 'name' }),
+        h(Input, { label: 'Gaming Name / Tag', icon: '🎮', type: 'text', placeholder: 'Your in-game username', required: true, value: form.gamertag, onChange: set('gamertag'), autoComplete: 'off' }),
+        h(Input, { label: 'Phone Number', icon: '📱', type: 'tel', placeholder: '0803 000 0000', required: true, value: form.phone, onChange: set('phone'), autoComplete: 'tel' }),
+        h(Input, { label: 'Email Address', icon: '📧', type: 'email', placeholder: 'your@email.com', required: true, value: form.email, onChange: set('email'), autoComplete: 'email' }),
+        h('div', { className: 'sm:col-span-2' },
+          h(Input, { label: 'City / Location', icon: '📍', type: 'text', placeholder: 'Lagos, Abuja, Port Harcourt...', required: true, value: form.location, onChange: set('location') })
         )
       ),
-      h('div', { className: 'border-t border-slate-700 pt-4' },
-        h('button', { type: 'submit', disabled: loading, className: 'w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3 rounded-xl transition disabled:opacity-50 text-lg' },
-          loading ? 'Processing...' : '🏆 REGISTER NOW'
-        ),
-        h('p', { className: 'text-slate-500 text-xs text-center mt-2' }, 'You will receive bank payment instructions after registering')
+      h('div', null,
+        h('label', { className: 'block text-slate-400 text-xs font-semibold uppercase tracking-wide mb-1.5' }, '🏆 Select Tournament'),
+        h('select', {
+          value: form.tournamentId, onChange: set('tournamentId'), required: true,
+          className: 'w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-white transition-all duration-200'
+        },
+          tournaments.map(t => {
+            const free = t.entryFee === 0;
+            return h('option', { key: t.id, value: t.id },
+              (t.game ? '[' + t.game + '] ' : '') + t.name + (free ? ' — FREE' : ' — ₦' + fmt(t.entryFee))
+            );
+          })
+        )
+      ),
+      h('div', { className: 'bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-xs text-slate-400 space-y-1' },
+        h('p', null, '📧 A confirmation email with your ticket and QR code will be sent to your email address.'),
+        isFree
+          ? h('p', { className: 'text-teal-400 font-semibold' }, '✓ This is a FREE event — you will be instantly confirmed.')
+          : h('p', { className: 'text-yellow-400 font-semibold' }, '💳 Payment instructions will follow. Your ticket ID is your bank transfer narration.')
+      ),
+      h('div', { className: 'pt-1' },
+        h('button', { type: 'submit', disabled: loading, className: 'w-full btn-primary py-3.5 rounded-xl font-black text-base disabled:opacity-50 disabled:cursor-not-allowed' },
+          loading
+            ? h('span', { className: 'flex items-center justify-center gap-2' }, h('div', { className: 'w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin' }), 'Processing...')
+            : '🏆 REGISTER NOW'
+        )
       )
     )
+  );
+}
+
+// ─── Success Page (for free events) ───────────────────────────────────
+function SuccessPage({ result, setPage }) {
+  if (!result) { setPage('home'); return null; }
+  return h('div', { className: 'max-w-md mx-auto text-center fade-in-up' },
+    h('div', { className: 'text-7xl mb-5 float-anim' }, '✅'),
+    h('h2', { className: 'text-3xl font-black text-green-400 mb-2' }, 'You\'re In!'),
+    h('p', { className: 'text-slate-400 mb-6' }, 'Your free registration is confirmed. Check your email for your ticket.'),
+    h('div', { className: 'bg-slate-900/80 border border-green-500/20 rounded-2xl p-5 mb-6 text-left space-y-2.5 text-sm' },
+      h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Ticket ID'), h('span', { className: 'font-mono font-black text-amber-400 text-base' }, result.ticketId)),
+      h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Status'), h(Badge, { status: 'confirmed' }))
+    ),
+    h('a', { href: '/ticket/' + result.ticketId, className: 'block w-full btn-primary py-3.5 rounded-xl font-black text-base mb-3' }, 'View My Ticket →'),
+    h('button', { onClick: () => setPage('home'), className: 'text-slate-500 hover:text-white text-sm transition' }, '← Back to Home')
   );
 }
 
@@ -317,168 +547,151 @@ function PaymentPage({ result, setPage }) {
     setLoading(true);
     try {
       const res = await fetch('/api/submit-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticketId: result.ticketId, paymentReference: ref })
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Submission failed'); setLoading(false); return; }
       setSubmitted(true);
-    } catch {
-      setError('Network error. Please try again.');
-    }
+    } catch { setError('Network error. Please try again.'); }
     setLoading(false);
   };
 
   if (submitted) {
-    return h('div', { className: 'max-w-md mx-auto text-center' },
-      h('div', { className: 'text-6xl mb-4' }, '✅'),
+    return h('div', { className: 'max-w-md mx-auto text-center fade-in-up' },
+      h('div', { className: 'text-6xl mb-4 float-anim' }, '📬'),
       h('h2', { className: 'text-2xl font-black text-green-400 mb-2' }, 'Reference Submitted!'),
-      h('p', { className: 'text-slate-300 mb-5' }, 'Your payment reference has been sent. An admin will review and approve it shortly.'),
-      h('div', { className: 'bg-slate-800 border border-slate-700 rounded-xl p-4 mb-5 text-left space-y-2 text-sm' },
-        h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Ticket ID'), h('span', { className: 'font-mono font-bold text-amber-400' }, result.ticketId)),
+      h('p', { className: 'text-slate-400 mb-6 text-sm' }, 'Your payment reference has been sent. Admin will review and confirm within 30 minutes during business hours.'),
+      h('div', { className: 'bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-6 text-left space-y-2.5 text-sm' },
+        h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Ticket ID'), h('span', { className: 'font-mono font-black text-amber-400 text-lg' }, result.ticketId)),
         h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Status'), h(Badge, { status: 'pending' }))
       ),
-      h('a', { href: '/ticket/' + result.ticketId, className: 'block w-full bg-amber-500 text-slate-900 font-bold py-3 rounded-xl hover:bg-amber-400 transition text-center mb-3' }, 'View My Ticket →'),
-      h('button', { onClick: () => setPage('home'), className: 'text-slate-400 hover:text-white text-sm transition' }, '← Back to Home')
+      h('a', { href: '/ticket/' + result.ticketId, className: 'block w-full btn-primary py-3.5 rounded-xl font-black text-base mb-3' }, 'View My Ticket →'),
+      h('button', { onClick: () => setPage('home'), className: 'text-slate-500 hover:text-white text-sm transition' }, '← Back to Home')
     );
   }
 
+  const pi = result.paymentInfo;
   return h('div', { className: 'max-w-md mx-auto' },
-    h('div', { className: 'bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-5' },
-      h('div', { className: 'text-green-400 font-bold text-lg mb-1' }, '✓ Registration Successful!'),
+    h('div', { className: 'bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-5 fade-in-up' },
+      h('div', { className: 'text-green-400 font-black text-lg mb-1' }, '✓ Registration Successful!'),
       h('div', { className: 'flex justify-between text-sm' },
         h('span', { className: 'text-slate-400' }, 'Your Ticket ID'),
-        h('span', { className: 'font-mono font-black text-amber-400 text-base' }, result.ticketId)
-      )
+        h('span', { className: 'font-mono font-black text-amber-400 text-lg' }, result.ticketId)
+      ),
+      h('p', { className: 'text-xs text-slate-500 mt-1' }, 'A confirmation email has been sent to your email address.')
     ),
 
-    h('div', { className: 'bg-slate-800 border border-amber-500/30 rounded-xl p-5 mb-5' },
-      h('h3', { className: 'font-black text-amber-400 mb-4 flex items-center gap-2' }, '💳 PAYMENT INSTRUCTIONS'),
-      h('p', { className: 'text-slate-300 text-sm mb-4' }, 'Send the exact entry fee to the account below, using your Ticket ID as the payment narration:'),
-      h('div', { className: 'space-y-0 rounded-lg overflow-hidden border border-slate-700' },
+    h('div', { className: 'bg-slate-900/80 border border-amber-500/20 rounded-2xl p-5 mb-5' },
+      h('h3', { className: 'font-black text-amber-400 mb-4 text-lg' }, '💳 PAYMENT INSTRUCTIONS'),
+      h('p', { className: 'text-slate-400 text-sm mb-4' }, 'Send the exact entry fee to the account below. Use your Ticket ID as the payment narration.'),
+      h('div', { className: 'rounded-xl overflow-hidden border border-slate-800 mb-4' },
         ...[
-          ['Amount',         '₦' + fmt(result.paymentInfo.amount), true],
-          ['Bank',           result.paymentInfo.bankName, false],
-          ['Account Name',   result.paymentInfo.accountName, false],
-          ['Account Number', result.paymentInfo.accountNumber, true],
+          ['Amount',         '₦' + fmt(pi.amount), true],
+          ['Bank',           pi.bankName, false],
+          ['Account Name',   pi.accountName, false],
+          ['Account Number', pi.accountNumber, true],
           ['Narration',      result.ticketId, true],
         ].map(([label, value, highlight]) =>
-          h('div', { className: 'flex justify-between items-center px-4 py-3 bg-slate-700/50 border-b border-slate-700 last:border-0' },
+          h('div', { className: 'flex justify-between items-center px-4 py-3 bg-slate-800/40 border-b border-slate-800 last:border-0' },
             h('span', { className: 'text-slate-400 text-sm' }, label),
             h('span', { className: `font-bold text-sm ${highlight ? 'text-amber-400 font-mono' : 'text-white'}` }, value)
           )
         )
       ),
-      h('div', { className: 'mt-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs text-yellow-300' },
-        '⚠ Important: Use your Ticket ID (', h('strong', null, result.ticketId), ') as the transfer narration so we can identify your payment.'
+      h('div', { className: 'bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300' },
+        '⚠ Important: Use ', h('strong', null, result.ticketId), ' as your bank narration so we can match your payment.'
       )
     ),
 
-    error && h('div', { className: 'bg-red-500/20 border border-red-500 text-red-300 rounded-lg p-3 mb-4 text-sm' }, error),
+    error && h('div', { className: 'bg-red-500/10 border border-red-500/40 text-red-300 rounded-xl p-3 mb-4 text-sm' }, error),
 
-    h('form', { onSubmit: submitRef, className: 'bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4' },
-      h('h3', { className: 'font-bold text-white' }, 'Confirm Your Transfer'),
-      h('p', { className: 'text-slate-400 text-sm' }, 'After making the transfer, paste your bank transaction reference number below so we can verify your payment.'),
-      h(Input, {
-        label: 'Bank Transaction Reference',
-        type: 'text',
-        placeholder: 'e.g. TRN2024071234567',
-        required: true,
-        value: ref,
-        onChange: e => setRef(e.target.value),
-        autoComplete: 'off'
-      }),
-      h('button', { type: 'submit', disabled: loading || !ref.trim(), className: 'w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition disabled:opacity-50' },
+    h('form', { onSubmit: submitRef, className: 'bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4' },
+      h('h3', { className: 'font-black text-white' }, 'Confirm Your Transfer'),
+      h('p', { className: 'text-slate-400 text-sm' }, 'After sending the transfer, paste your bank transaction reference here:'),
+      h(Input, { label: 'Bank Transaction Reference', type: 'text', placeholder: 'e.g. TRN2026071234567', required: true, value: ref, onChange: e => setRef(e.target.value), autoComplete: 'off' }),
+      h('button', { type: 'submit', disabled: loading || !ref.trim(), className: 'w-full py-3 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl transition disabled:opacity-50' },
         loading ? 'Submitting...' : '✓ SUBMIT PAYMENT REFERENCE'
       ),
-      h('p', { className: 'text-slate-500 text-xs text-center' }, 'Your ticket will be confirmed within 30 minutes after submission during business hours.')
+      h('p', { className: 'text-slate-600 text-xs text-center' }, 'Confirmed within 30 minutes during business hours.')
     ),
 
-    h('div', { className: 'mt-4 text-center' },
-      h('a', { href: '/ticket/' + result.ticketId, className: 'text-amber-400 text-sm hover:underline' }, 'View ticket page →')
+    h('div', { className: 'mt-5 text-center' },
+      h('a', { href: '/ticket/' + result.ticketId, className: 'text-amber-400 hover:text-amber-300 text-sm transition' }, 'View Ticket Page →')
     )
   );
 }
 
-// ─── Ticket Lookup ────────────────────────────────────────────────────
-function LookupPage() {
-  const [ticketId, setTicketId] = useState('');
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+// ─── Ticket Lookup Page ────────────────────────────────────────────────
+function LookupPage({ setPage }) {
+  const [id, setId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const search = async (e) => {
     e.preventDefault();
-    setError(''); setResult(null); setLoading(true);
-    try {
-      const res = await fetch('/api/ticket/' + ticketId.trim().toUpperCase());
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Ticket not found'); }
-      else setResult(data);
-    } catch {
-      setError('Network error. Please try again.');
-    }
-    setLoading(false);
+    if (!id.trim()) return;
+    setError('');
+    setLoading(true);
+    // Redirect to ticket page
+    window.location.href = '/ticket/' + id.trim().toUpperCase();
   };
 
   return h('div', { className: 'max-w-md mx-auto' },
-    h('h2', { className: 'text-2xl font-black text-amber-400 mb-2' }, '🔍 Find My Ticket'),
-    h('p', { className: 'text-slate-400 text-sm mb-6' }, 'Enter the Ticket ID you received when you registered.'),
-    h('form', { onSubmit: search, className: 'flex gap-2 mb-5' },
-      h('input', { type: 'text', value: ticketId, onChange: e => setTicketId(e.target.value), placeholder: 'e.g. A1B2C3D4', required: true, className: 'flex-1 bg-slate-700 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none font-mono uppercase', maxLength: 8, autoComplete: 'off' }),
-      h('button', { type: 'submit', disabled: loading, className: 'px-5 py-2.5 bg-amber-500 text-black font-bold rounded-xl hover:bg-amber-400 transition disabled:opacity-50' }, loading ? '...' : 'FIND')
+    h('button', { onClick: () => setPage('home'), className: 'text-amber-400 text-sm mb-6 hover:underline flex items-center gap-1.5 font-medium' }, '← Back to Home'),
+    h('h2', { className: 'text-3xl font-black text-amber-400 mb-1' }, 'FIND MY TICKET'),
+    h('p', { className: 'text-slate-500 text-sm mb-6' }, 'Enter your Ticket ID to view your registration'),
+
+    error && h('div', { className: 'bg-red-500/10 border border-red-500/40 text-red-300 rounded-xl p-3 mb-5 text-sm' }, error),
+
+    h('form', { onSubmit: search, className: 'bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-4' },
+      h(Input, { label: 'Ticket ID', icon: '🎫', type: 'text', placeholder: 'e.g. A1B2C3D4', required: true, value: id, onChange: e => setId(e.target.value.toUpperCase()), autoComplete: 'off', maxLength: 8 }),
+      h('button', { type: 'submit', disabled: loading || !id.trim(), className: 'w-full btn-primary py-3 rounded-xl font-black disabled:opacity-50' },
+        loading ? 'Searching...' : '🔍 View Ticket'
+      )
     ),
-    error && h('div', { className: 'bg-red-500/20 border border-red-500 text-red-300 rounded-lg p-3 mb-4 text-sm' }, error),
-    result && h('div', { className: 'bg-slate-800 border border-amber-500/30 rounded-xl p-5 space-y-3' },
-      h('div', { className: 'flex justify-between items-center' },
-        h('div', { className: 'font-black text-xl text-amber-400 font-mono' }, result.ticketId),
-        h(Badge, { status: result.paymentStatus })
-      ),
-      h('div', { className: 'text-sm space-y-2 border-t border-slate-700 pt-3' },
-        h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Player'), h('span', { className: 'font-bold' }, result.playerName)),
-        h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'In-Game Tag'), h('span', { className: 'text-amber-400 font-bold' }, result.gamertag)),
-        result.tournament && h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Tournament'), h('span', { className: 'text-right text-xs max-w-[60%]' }, result.tournament.name)),
-        result.paymentReference && h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Reference'), h('span', { className: 'font-mono text-xs' }, result.paymentReference))
-      ),
-      result.paymentStatus === 'pending' && !result.paymentReference &&
-        h('div', { className: 'bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs text-yellow-300' }, '⚠ No payment reference submitted yet. Please submit your bank transfer reference.'),
-      h('a', { href: '/ticket/' + result.ticketId, className: 'block text-center bg-amber-500 text-slate-900 font-bold py-2.5 rounded-xl hover:bg-amber-400 transition text-sm mt-2' }, 'View Full Ticket →')
+
+    h('div', { className: 'mt-4 text-center' },
+      h('p', { className: 'text-slate-600 text-sm' }, 'Need more options? '),
+      h('a', { href: '/dashboard', className: 'text-amber-400 hover:underline text-sm font-medium' }, 'Go to full dashboard →')
     )
   );
 }
 
-// ─── App Root ──────────────────────────────────────────────────────────
+// ─── App ───────────────────────────────────────────────────────────────
 function App() {
   const [page, setPage] = useState('home');
   const [registrationResult, setRegistrationResult] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  return h('div', { className: 'min-h-screen bg-slate-950' },
+  useEffect(() => {
+    // Check for hash routing
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'register') setPage('register');
+    setTimeout(() => setInitialLoad(false), 1200);
+  }, []);
+
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
+
+  if (initialLoad) return h(LoadingScreen);
+
+  return h('div', { className: 'min-h-screen' },
     h(Nav, { page, setPage }),
-    h('main', { className: 'max-w-5xl mx-auto px-4 py-8' },
+    h('div', { className: 'max-w-6xl mx-auto px-4 py-8' },
       page === 'home'     && h(HomePage, { setPage }),
       page === 'register' && h(RegisterPage, { setPage, setRegistrationResult }),
       page === 'payment'  && h(PaymentPage, { result: registrationResult, setPage }),
-      page === 'lookup'   && h(LookupPage)
-    ),
-    h('footer', { className: 'border-t border-slate-800 mt-16 py-8 px-4' },
-      h('div', { className: 'max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-600' },
-        h('div', null,
-          h('div', { className: 'font-black text-slate-500 mb-1' }, '🏆 East Arena Gaming Tournament'),
-          'Premier Competitive Gaming Platform · Nigeria'
-        ),
-        h('div', { className: 'flex gap-4' },
-          h('span', null, '⚽ FIFA'),
-          h('span', { className: 'opacity-40' }, '🔫 CODM (Soon)'),
-          h('span', { className: 'opacity-40' }, '🔥 Free Fire (Soon)')
-        ),
-        h('a', { href: '/admin', className: 'hover:text-slate-400 transition' }, 'Admin Panel')
-      )
+      page === 'success'  && h(SuccessPage, { result: registrationResult, setPage }),
+      page === 'lookup'   && h(LookupPage, { setPage })
     )
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(h(App));
 </script>
 </body>
 </html>

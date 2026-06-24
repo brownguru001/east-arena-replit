@@ -1,0 +1,5 @@
+- [East Arena architecture](east-arena-arch.md) — JSON file DB, Express backend, vanilla HTML frontend, admin at /admin
+  - [East Arena credentials](east-arena-creds.md) — admin username/password stored in .replit userenv, NOT in code
+  - [East Arena email setup](east-arena-email.md) — nodemailer with SMTP env vars; graceful skip if unconfigured
+  - [East Arena QR codes](east-arena-qr.md) — generated on-demand in /api/ticket/:id, not stored in JSON
+  

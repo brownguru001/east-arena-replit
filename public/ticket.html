@@ -3,163 +3,275 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>East Arena - Ticket</title>
-  <link rel="icon" href="/favicon.svg" />
+  <title>East Arena — Tournament Ticket</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #0F1419; color: #fff; font-family: system-ui, sans-serif; }
-    @media print { .no-print { display: none; } }
+    * { box-sizing: border-box; }
+    body { background: #0A0E14; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
+
+    @keyframes fadeIn   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin     { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+    @keyframes glow-green { 0%,100% { box-shadow:0 0 20px rgba(52,211,153,.3); } 50% { box-shadow:0 0 40px rgba(52,211,153,.6); } }
+    @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+
+    .fade-in    { animation: fadeIn .6s ease forwards; }
+    .spin       { animation: spin .8s linear infinite; }
+    .glow-green { animation: glow-green 2s ease-in-out infinite; }
+    .pulse-anim { animation: pulse 2s ease-in-out infinite; }
+
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .no-print { display: none !important; }
+      #ticket-card { border: 2px solid #000 !important; box-shadow: none !important; }
+      .print-dark { background: #000 !important; color: #fff !important; }
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6">
+<body class="min-h-screen p-4 sm:p-6">
 
-  <div id="loading" class="text-center">
-    <div class="text-4xl mb-4">🏆</div>
-    <p class="text-slate-400">Loading ticket...</p>
+  <div id="loading" class="min-h-screen flex items-center justify-center">
+    <div class="text-center">
+      <div class="text-5xl mb-4">🏆</div>
+      <div class="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full spin mx-auto mb-3"></div>
+      <p class="text-slate-500 text-sm">Loading your ticket...</p>
+    </div>
   </div>
 
-  <div id="error" class="hidden text-center">
-    <div class="text-5xl mb-4">❌</div>
-    <h2 class="text-2xl font-bold text-red-400 mb-2">Ticket Not Found</h2>
-    <p class="text-slate-400 mb-6">This ticket ID does not exist or has been removed.</p>
-    <a href="/" class="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition">← Back to Home</a>
+  <div id="error" class="hidden min-h-screen flex items-center justify-center">
+    <div class="text-center max-w-sm">
+      <div class="text-6xl mb-5">🎫</div>
+      <h2 class="text-2xl font-black text-red-400 mb-2">Ticket Not Found</h2>
+      <p class="text-slate-400 text-sm mb-6">This ticket ID doesn't exist or has been removed from the system.</p>
+      <a href="/" class="inline-block px-8 py-3 bg-amber-500 text-black font-black rounded-xl hover:bg-amber-400 transition">← Back to Home</a>
+    </div>
   </div>
 
-  <div id="ticket" class="hidden w-full max-w-md">
-    <div class="text-center mb-6 no-print">
-      <a href="/" class="text-amber-400 hover:text-amber-300 text-sm">← East Arena Home</a>
+  <div id="ticket-wrap" class="hidden max-w-md mx-auto">
+
+    <!-- Back link -->
+    <div class="text-center mb-5 no-print">
+      <a href="/" class="text-amber-400 hover:text-amber-300 text-sm font-medium transition">← East Arena Home</a>
     </div>
 
-    <div class="bg-slate-800 border-2 rounded-2xl overflow-hidden" id="ticket-card">
-      <!-- Header -->
-      <div class="bg-gradient-to-r from-amber-600 to-amber-500 p-6 text-center text-slate-900">
-        <div class="text-3xl font-black mb-1">🏆 EAST ARENA</div>
-        <div class="text-sm font-semibold uppercase tracking-widest">Official Tournament Ticket</div>
+    <!-- Ticket Card -->
+    <div id="ticket-card" class="bg-slate-900 rounded-2xl overflow-hidden fade-in" style="border:1px solid rgba(245,158,11,0.2)">
+
+      <!-- Header Band -->
+      <div id="ticket-header" class="p-6 text-center print-dark" style="background:linear-gradient(135deg,#d97706,#f59e0b)">
+        <div class="text-4xl font-black text-slate-900 mb-1">🏆 EAST ARENA</div>
+        <div class="text-xs font-black uppercase tracking-[.2em] text-slate-900/70">Official Tournament Ticket</div>
       </div>
 
       <!-- Status Banner -->
-      <div id="status-banner" class="p-3 text-center font-bold text-sm uppercase tracking-wider"></div>
+      <div id="status-banner" class="py-2.5 text-center font-black text-xs uppercase tracking-[.12em]"></div>
 
-      <!-- Player Info -->
-      <div class="p-6 space-y-4">
-        <div class="grid grid-cols-2 gap-4 text-sm">
+      <!-- Player Details -->
+      <div class="p-6 space-y-5">
+
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
           <div>
-            <div class="text-slate-400 text-xs uppercase mb-1">Player Name</div>
-            <div class="font-bold text-white" id="t-player"></div>
+            <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">Player Name</div>
+            <div class="font-black text-white" id="t-player"></div>
           </div>
           <div>
-            <div class="text-slate-400 text-xs uppercase mb-1">Gamer Tag</div>
-            <div class="font-bold text-amber-400" id="t-gamertag"></div>
+            <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">Gaming Name</div>
+            <div class="font-black text-amber-400" id="t-gamertag"></div>
           </div>
           <div>
-            <div class="text-slate-400 text-xs uppercase mb-1">Location</div>
-            <div class="font-bold text-white" id="t-location"></div>
+            <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">Location</div>
+            <div class="font-semibold text-white" id="t-location"></div>
           </div>
           <div>
-            <div class="text-slate-400 text-xs uppercase mb-1">Registered</div>
-            <div class="font-bold text-white" id="t-date"></div>
+            <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">Registered</div>
+            <div class="font-semibold text-white" id="t-date"></div>
           </div>
         </div>
 
-        <div class="border-t border-slate-700 pt-4">
-          <div class="text-slate-400 text-xs uppercase mb-1">Tournament</div>
-          <div class="font-bold text-white" id="t-tournament"></div>
-          <div class="text-slate-400 text-sm mt-1" id="t-tournament-date"></div>
+        <!-- Tournament -->
+        <div class="border-t border-slate-800 pt-4">
+          <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-2">Tournament</div>
+          <div class="font-black text-white text-base" id="t-tournament"></div>
+          <div class="flex items-center gap-3 mt-2">
+            <span class="text-slate-400 text-xs" id="t-tournament-date"></span>
+            <span id="t-game-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300 uppercase tracking-wide"></span>
+          </div>
         </div>
 
-        <div class="border-t border-slate-700 pt-4">
-          <div class="text-slate-400 text-xs uppercase mb-2">Ticket ID</div>
-          <div class="font-mono text-2xl font-black text-amber-400 tracking-widest text-center py-2 bg-slate-700 rounded-lg" id="t-id"></div>
+        <!-- Ticket ID -->
+        <div class="border-t border-slate-800 pt-4">
+          <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-2">Ticket ID</div>
+          <div class="font-mono text-3xl font-black text-amber-400 tracking-[.15em] text-center py-3 bg-slate-800/50 rounded-xl border border-slate-700" id="t-id"></div>
         </div>
 
         <!-- QR Code -->
-        <div class="border-t border-slate-700 pt-4 text-center">
-          <div class="text-slate-400 text-xs uppercase mb-3">Scan at Venue</div>
-          <div class="bg-white p-4 rounded-xl inline-block">
-            <img id="t-qr" src="" alt="QR Code" class="w-48 h-48" />
+        <div class="border-t border-slate-800 pt-4 text-center">
+          <div class="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-3">Scan at Venue Entrance</div>
+          <div class="bg-white p-4 rounded-2xl inline-block shadow-lg">
+            <img id="t-qr" src="" alt="QR Code" class="w-52 h-52 block" />
           </div>
-          <div class="text-slate-500 text-xs mt-2">Show this QR code at the venue entrance</div>
+          <p class="text-slate-600 text-xs mt-3">Present this QR code at the venue entrance</p>
         </div>
 
-        <!-- Check-in status -->
-        <div id="checkin-badge" class="hidden border-t border-slate-700 pt-4 text-center">
-          <span class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold">✓ CHECKED IN</span>
-          <div class="text-slate-400 text-xs mt-2" id="checkin-time"></div>
+        <!-- Check-in Badge -->
+        <div id="checkin-badge" class="hidden border-t border-slate-800 pt-4 text-center">
+          <span class="bg-green-500/20 border border-green-500/40 text-green-400 px-6 py-2.5 rounded-full text-sm font-black glow-green inline-block">✓ CHECKED IN</span>
+          <div class="text-slate-500 text-xs mt-2" id="checkin-time"></div>
         </div>
+
+        <!-- Payment Info (for pending) -->
+        <div id="payment-info" class="hidden border-t border-slate-800 pt-4">
+          <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+            <p class="text-yellow-400 font-bold text-sm mb-2">💳 Payment Required</p>
+            <div id="payment-details" class="text-sm space-y-1.5"></div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="bg-slate-900 p-4 text-center text-slate-500 text-xs">
-        East Arena Gaming • Premium FIFA Tournaments
+      <!-- Footer -->
+      <div class="bg-slate-950/50 p-4 text-center text-slate-600 text-xs border-t border-slate-800">
+        East Arena Gaming · Nigeria's Premier Tournament Platform · Season 1
       </div>
     </div>
 
-    <div class="mt-6 flex gap-3 justify-center no-print">
-      <button onclick="window.print()" class="px-6 py-2 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition text-sm">
-        🖨️ Print Ticket
+    <!-- Action Buttons -->
+    <div class="mt-5 flex gap-3 no-print">
+      <button onclick="window.print()" class="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-sm transition border border-slate-700">
+        🖨️ Print
       </button>
-      <a href="/" class="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition text-sm">Home</a>
+      <button onclick="copyTicketId()" id="copy-btn" class="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-sm transition border border-slate-700">
+        📋 Copy ID
+      </button>
+      <a href="/" class="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl text-sm transition text-center">
+        Home
+      </a>
     </div>
+
+    <!-- Submit payment ref section (if pending) -->
+    <div id="submit-payment-section" class="hidden mt-5 no-print">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <h3 class="font-black text-white mb-1">Already Paid?</h3>
+        <p class="text-slate-400 text-sm mb-4">Submit your bank transaction reference to speed up confirmation.</p>
+        <div id="pay-error" class="hidden bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg p-3 text-sm mb-3"></div>
+        <div id="pay-success" class="hidden bg-green-500/10 border border-green-500/30 text-green-300 rounded-lg p-3 text-sm mb-3"></div>
+        <form id="payment-ref-form" class="flex gap-2">
+          <input id="ref-input" type="text" placeholder="Bank transaction reference" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-500 focus:border-amber-400 focus:outline-none" />
+          <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-sm transition whitespace-nowrap">Submit Ref</button>
+        </form>
+      </div>
+    </div>
+
   </div>
 
-  <script>
-    const ticketId = window.location.pathname.split('/ticket/')[1];
+<script>
+  const ticketId = window.location.pathname.split('/ticket/')[1]?.trim();
+  let ticketData = null;
 
-    if (!ticketId) {
-      document.getElementById('loading').classList.add('hidden');
-      document.getElementById('error').classList.remove('hidden');
-    } else {
-      fetch('/api/ticket/' + ticketId)
-        .then(r => r.json())
-        .then(data => {
-          document.getElementById('loading').classList.add('hidden');
+  function copyTicketId() {
+    if (!ticketData) return;
+    navigator.clipboard.writeText(ticketData.ticketId).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy ID', 2000);
+    });
+  }
 
-          if (data.error) {
-            document.getElementById('error').classList.remove('hidden');
-            return;
+  function setEl(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+  if (!ticketId) {
+    hide('loading'); show('error');
+  } else {
+    fetch('/api/ticket/' + ticketId)
+      .then(r => r.json())
+      .then(data => {
+        hide('loading');
+
+        if (data.error) { show('error'); return; }
+
+        ticketData = data;
+        show('ticket-wrap');
+
+        setEl('t-player', data.playerName);
+        setEl('t-gamertag', '@' + data.gamertag);
+        setEl('t-location', data.location);
+        setEl('t-date', new Date(data.registeredAt).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' }));
+        setEl('t-id', data.ticketId);
+
+        if (data.tournament) {
+          setEl('t-tournament', data.tournament.name);
+          setEl('t-tournament-date', '📅 ' + new Date(data.tournament.date).toLocaleDateString('en-NG', { day:'numeric', month:'long', year:'numeric' }));
+          const gameBadge = document.getElementById('t-game-badge');
+          if (gameBadge && data.tournament.game) gameBadge.textContent = data.tournament.game;
+        }
+
+        if (data.qrCode) {
+          document.getElementById('t-qr').src = data.qrCode;
+        }
+
+        // Status
+        const banner = document.getElementById('status-banner');
+        const card = document.getElementById('ticket-card');
+        if (data.paymentStatus === 'confirmed') {
+          banner.textContent = '✓ CONFIRMED — Valid Entry Ticket';
+          banner.style.cssText = 'background:#065f46;color:#34d399;';
+          card.style.border = '1px solid rgba(52,211,153,0.4)';
+          card.classList.add('glow-green');
+        } else if (data.paymentStatus === 'rejected') {
+          banner.textContent = '✗ REJECTED — Payment Not Accepted';
+          banner.style.cssText = 'background:#7f1d1d;color:#fca5a5;';
+          card.style.border = '1px solid rgba(248,113,113,0.4)';
+        } else {
+          banner.textContent = '⏳ PENDING — Awaiting Payment Confirmation';
+          banner.style.cssText = 'background:#78350f;color:#fcd34d;';
+          card.style.border = '1px solid rgba(245,158,11,0.3)';
+          // Show payment info and submit section
+          if (data.tournament && data.tournament.entryFee > 0) {
+            show('payment-info');
+            show('submit-payment-section');
+            document.getElementById('payment-details').innerHTML =
+              `<div class="text-yellow-200">Transfer <strong>₦${Number(data.tournament.entryFee).toLocaleString()}</strong> using Ticket ID <strong class="font-mono">${data.ticketId}</strong> as narration</div>`;
           }
+        }
 
-          document.getElementById('ticket').classList.remove('hidden');
-          document.getElementById('t-player').textContent = data.playerName;
-          document.getElementById('t-gamertag').textContent = data.gamertag;
-          document.getElementById('t-location').textContent = data.location;
-          document.getElementById('t-date').textContent = new Date(data.registeredAt).toLocaleDateString();
-          document.getElementById('t-id').textContent = data.ticketId;
+        // Check-in
+        if (data.checkedIn) {
+          show('checkin-badge');
+          setEl('checkin-time', 'Checked in at ' + new Date(data.checkedInAt).toLocaleString('en-NG'));
+        }
+      })
+      .catch(() => { hide('loading'); show('error'); });
+  }
 
-          if (data.tournament) {
-            document.getElementById('t-tournament').textContent = data.tournament.name;
-            document.getElementById('t-tournament-date').textContent = 'Date: ' + new Date(data.tournament.date).toLocaleDateString();
-          }
-
-          if (data.qrCode) {
-            document.getElementById('t-qr').src = data.qrCode;
-          }
-
-          const banner = document.getElementById('status-banner');
-          const card = document.getElementById('ticket-card');
-          if (data.paymentStatus === 'confirmed') {
-            banner.textContent = '✓ CONFIRMED — Valid Ticket';
-            banner.className = 'p-3 text-center font-bold text-sm uppercase tracking-wider bg-green-600 text-white';
-            card.className = 'bg-slate-800 border-2 border-green-500 rounded-2xl overflow-hidden';
-          } else if (data.paymentStatus === 'rejected') {
-            banner.textContent = '✗ REJECTED — Payment not accepted';
-            banner.className = 'p-3 text-center font-bold text-sm uppercase tracking-wider bg-red-700 text-white';
-            card.className = 'bg-slate-800 border-2 border-red-500 rounded-2xl overflow-hidden';
-          } else {
-            banner.textContent = '⏳ PENDING — Awaiting payment confirmation';
-            banner.className = 'p-3 text-center font-bold text-sm uppercase tracking-wider bg-yellow-600 text-slate-900';
-            card.className = 'bg-slate-800 border-2 border-yellow-500 rounded-2xl overflow-hidden';
-          }
-
-          if (data.checkedIn) {
-            document.getElementById('checkin-badge').classList.remove('hidden');
-            document.getElementById('checkin-time').textContent = 'Checked in: ' + new Date(data.checkedInAt).toLocaleString();
-          }
-        })
-        .catch(() => {
-          document.getElementById('loading').classList.add('hidden');
-          document.getElementById('error').classList.remove('hidden');
-        });
+  // Payment reference form
+  document.getElementById('payment-ref-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ref = document.getElementById('ref-input').value.trim();
+    if (!ref) return;
+    const errEl = document.getElementById('pay-error');
+    const sucEl = document.getElementById('pay-success');
+    errEl.classList.add('hidden'); sucEl.classList.add('hidden');
+    try {
+      const res = await fetch('/api/submit-payment', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId, paymentReference: ref })
+      });
+      const data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error; errEl.classList.remove('hidden'); return; }
+      sucEl.textContent = '✓ Reference submitted! Admin will confirm shortly.';
+      sucEl.classList.remove('hidden');
+      document.getElementById('ref-input').value = '';
+    } catch {
+      errEl.textContent = 'Network error. Please try again.'; errEl.classList.remove('hidden');
     }
-  </script>
+  });
+</script>
 </body>
 </html>

@@ -4,205 +4,356 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>East Arena — Admin Panel</title>
-  <link rel="icon" href="/favicon.svg" />
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #0F1419; color: #fff; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { background: #0A0E14; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
     input, select, textarea { color-scheme: dark; }
-    .tab-active { border-bottom: 2px solid #f59e0b; color: #f59e0b; }
+    @keyframes spin   { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+    @keyframes slideOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(100%); opacity:0; } }
+    .spin    { animation: spin .8s linear infinite; }
+    .fade-in { animation: fadeIn .3s ease forwards; }
+    .tab-active { border-bottom: 2px solid #f59e0b; color: #f59e0b !important; }
+    input:focus, select:focus, textarea:focus { outline:none; border-color:#f59e0b !important; box-shadow:0 0 0 3px rgba(245,158,11,0.15); }
+    .status-confirmed { background:#065f46; color:#34d399; }
+    .status-pending   { background:#78350f; color:#fcd34d; }
+    .status-rejected  { background:#7f1d1d; color:#fca5a5; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:#0A0E14; }
+    ::-webkit-scrollbar-thumb { background:#1e293b; border-radius:3px; }
+    .scan-success { background: rgba(5,150,105,0.2); border:1px solid rgba(52,211,153,0.4); }
+    .scan-error   { background: rgba(127,29,29,0.2); border:1px solid rgba(248,113,113,0.4); }
+    .scan-warning { background: rgba(120,53,14,0.2); border:1px solid rgba(245,158,11,0.4); }
   </style>
 </head>
 <body class="min-h-screen">
 
-<!-- LOGIN -->
+<!-- ── LOGIN ──────────────────────────────────────────────────────────── -->
 <div id="login-screen" class="min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-sm">
     <div class="text-center mb-8">
-      <div class="text-5xl mb-3">🏆</div>
+      <div class="text-6xl mb-4">🏆</div>
       <h1 class="text-2xl font-black text-amber-400">EAST ARENA</h1>
-      <p class="text-slate-400 text-sm mt-1">Gaming Tournament · Admin Panel</p>
+      <p class="text-slate-500 text-sm mt-1">Admin Panel · Secure Access</p>
     </div>
-    <form id="login-form" class="bg-slate-800 border border-amber-500/30 rounded-xl p-6 space-y-4">
-      <div id="login-error" class="hidden bg-red-500/20 border border-red-500 text-red-300 rounded p-3 text-sm"></div>
+    <form id="login-form" class="bg-slate-900/80 border border-amber-500/20 rounded-2xl p-6 space-y-4">
+      <div id="login-error" class="hidden bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-3 text-sm"></div>
       <div>
-        <label class="block text-slate-400 text-xs uppercase mb-1">Username</label>
+        <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1.5">Username</label>
         <input id="login-user" type="text" required autocomplete="username"
-          class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white" />
       </div>
       <div>
-        <label class="block text-slate-400 text-xs uppercase mb-1">Password</label>
+        <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1.5">Password</label>
         <input id="login-pass" type="password" required autocomplete="current-password"
-          class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white" />
       </div>
-      <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-lg transition">
+      <button type="submit" id="login-btn" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3 rounded-xl transition">
         LOGIN
       </button>
     </form>
+    <p class="text-center text-slate-700 text-xs mt-5">This admin area is restricted. Unauthorized access is prohibited.</p>
   </div>
 </div>
 
-<!-- ADMIN APP -->
+<!-- ── ADMIN APP ──────────────────────────────────────────────────────── -->
 <div id="admin-app" class="hidden min-h-screen flex flex-col">
 
   <!-- Top Bar -->
-  <div class="bg-slate-900 border-b border-amber-500/20 px-4 sm:px-6 py-3 flex justify-between items-center sticky top-0 z-50">
+  <div class="bg-[#0A0E14] border-b border-amber-500/10 px-4 sm:px-6 py-3 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-3">
       <span class="font-black text-amber-400">🏆 EAST ARENA</span>
-      <span class="text-slate-500 text-sm hidden sm:inline">Admin Panel</span>
+      <span class="text-slate-600 text-sm hidden sm:inline">Admin Panel</span>
+      <span id="email-status-dot" class="hidden text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/20">📧 Email On</span>
     </div>
     <div class="flex items-center gap-3">
-      <a href="/" target="_blank" class="text-slate-400 hover:text-white text-sm hidden sm:block">View Site →</a>
-      <button id="logout-btn" class="text-sm text-red-400 hover:text-red-300 border border-red-400/30 px-3 py-1 rounded transition">Logout</button>
+      <a href="/" target="_blank" class="text-slate-500 hover:text-white text-sm hidden sm:block transition">View Site →</a>
+      <button id="logout-btn" class="text-sm text-red-400 hover:text-red-300 border border-red-400/20 px-3 py-1.5 rounded-lg transition">Logout</button>
     </div>
   </div>
 
   <!-- Tabs -->
-  <div class="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 overflow-x-auto">
+  <div class="bg-[#0A0E14] border-b border-slate-800 px-4 sm:px-6 overflow-x-auto">
     <div class="flex gap-0 min-w-max">
-      <button class="tab-btn tab-active px-4 py-3 text-sm font-semibold transition whitespace-nowrap" data-tab="overview">Overview</button>
-      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition whitespace-nowrap" data-tab="registrations">Registrations</button>
-      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition whitespace-nowrap" data-tab="tournaments">Tournaments</button>
-      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition whitespace-nowrap" data-tab="settings">Settings</button>
+      <button class="tab-btn tab-active px-4 py-3 text-sm font-semibold transition whitespace-nowrap" data-tab="overview">📊 Overview</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="registrations">👥 Players</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="checkin">📱 Check-In</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="tournaments">🏆 Tournaments</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="announcements">📢 Announcements</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="settings">⚙️ Settings</button>
     </div>
   </div>
 
   <!-- Content -->
   <div class="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full">
 
-    <!-- OVERVIEW -->
-    <div id="tab-overview" class="tab-content">
+    <!-- ── OVERVIEW ──────────────────────────────────────────────────── -->
+    <div id="tab-overview" class="tab-content fade-in">
       <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
         <h2 class="text-xl font-black text-white">Dashboard Overview</h2>
-        <button id="export-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-semibold transition">📥 Export Backup</button>
+        <div class="flex gap-2">
+          <button id="refresh-overview" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm transition border border-slate-700">🔄 Refresh</button>
+          <button id="export-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition border border-slate-700">📥 Export</button>
+        </div>
       </div>
-      <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8"></div>
-      <div class="bg-slate-800 rounded-xl p-5">
-        <h3 class="font-bold text-white mb-4">⚡ Pending Payments — Action Required</h3>
-        <div id="pending-list"><p class="text-slate-400 text-sm">Loading...</p></div>
+      <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
+
+      <!-- Revenue by Tournament -->
+      <div id="revenue-breakdown" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-5"></div>
+
+      <!-- Pending Payments -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <h3 class="font-black text-white mb-4">⚡ Pending Payments — Action Required</h3>
+        <div id="pending-list"><p class="text-slate-500 text-sm">Loading...</p></div>
       </div>
     </div>
 
-    <!-- REGISTRATIONS -->
+    <!-- ── REGISTRATIONS ──────────────────────────────────────────────── -->
     <div id="tab-registrations" class="tab-content hidden">
       <div class="flex flex-wrap gap-3 mb-5 items-center justify-between">
-        <h2 class="text-xl font-black text-white">All Registrations</h2>
+        <h2 class="text-xl font-black text-white">All Players</h2>
         <div class="flex gap-2 flex-wrap">
-          <input id="search-input" type="text" placeholder="Search name, tag, phone, ticket..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm focus:border-amber-400 focus:outline-none w-56" />
-          <select id="status-filter" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm focus:border-amber-400 focus:outline-none">
+          <input id="search-input" type="text" placeholder="Search name, tag, phone, email, ticket..." class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm w-64" />
+          <select id="status-filter" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="rejected">Rejected</option>
           </select>
-          <button id="refresh-regs" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">🔄</button>
+          <select id="tournament-filter" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+            <option value="">All Tournaments</option>
+          </select>
+          <button id="refresh-regs" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm border border-slate-700">🔄</button>
         </div>
       </div>
-      <div class="overflow-x-auto rounded-xl border border-slate-700">
+      <div class="overflow-x-auto rounded-2xl border border-slate-800">
         <table class="w-full text-sm min-w-max">
-          <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+          <thead class="bg-slate-800/80 text-slate-400 uppercase text-xs">
             <tr>
               <th class="text-left px-4 py-3">Player</th>
-              <th class="text-left px-4 py-3">Tag</th>
+              <th class="text-left px-4 py-3">Gaming Tag</th>
+              <th class="text-left px-4 py-3">Email</th>
               <th class="text-left px-4 py-3">Tournament</th>
               <th class="text-left px-4 py-3">Ticket</th>
               <th class="text-left px-4 py-3">Ref #</th>
               <th class="text-left px-4 py-3">Status</th>
-              <th class="text-left px-4 py-3">In</th>
+              <th class="text-center px-4 py-3">In</th>
               <th class="text-left px-4 py-3">Date</th>
               <th class="text-left px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody id="regs-tbody" class="divide-y divide-slate-800 bg-slate-900/40">
-            <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Loading...</td></tr>
+          <tbody id="regs-tbody" class="divide-y divide-slate-800/50 bg-slate-900/20">
+            <tr><td colspan="10" class="px-4 py-10 text-center text-slate-500">Loading...</td></tr>
           </tbody>
         </table>
       </div>
-      <div id="regs-count" class="text-slate-500 text-xs mt-2"></div>
+      <div id="regs-count" class="text-slate-600 text-xs mt-2 px-1"></div>
     </div>
 
-    <!-- TOURNAMENTS -->
-    <div id="tab-tournaments" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-5">
-        <h2 class="text-xl font-black text-white">Tournament Management</h2>
-        <button id="add-tournament-btn" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-lg text-sm transition">+ Add Tournament</button>
-      </div>
-      <div id="tournament-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>
-    </div>
+    <!-- ── CHECK-IN SCANNER ─────────────────────────────────────────── -->
+    <div id="tab-checkin" class="tab-content hidden">
+      <div class="max-w-lg mx-auto">
+        <div class="text-center mb-8">
+          <div class="text-5xl mb-3">📱</div>
+          <h2 class="text-2xl font-black text-white">Venue Check-In</h2>
+          <p class="text-slate-500 text-sm mt-1">Scan QR codes or enter Ticket IDs at the venue entrance</p>
+        </div>
 
-    <!-- SETTINGS -->
-    <div id="tab-settings" class="tab-content hidden">
-      <h2 class="text-xl font-black text-white mb-6">Settings</h2>
-
-      <div class="max-w-md">
-        <!-- Change Password -->
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 mb-6">
-          <h3 class="font-bold text-white mb-1">🔒 Change Admin Password</h3>
-          <p class="text-slate-400 text-sm mb-5">After changing your password you will be logged out and must log in again.</p>
-          <div id="pw-success" class="hidden bg-green-500/20 border border-green-500 text-green-300 rounded p-3 text-sm mb-4"></div>
-          <div id="pw-error" class="hidden bg-red-500/20 border border-red-500 text-red-300 rounded p-3 text-sm mb-4"></div>
-          <form id="change-pw-form" class="space-y-4">
+        <div class="bg-slate-900/80 border border-amber-500/20 rounded-2xl p-6 mb-5">
+          <form id="scan-form" class="space-y-4">
             <div>
-              <label class="block text-slate-400 text-xs uppercase mb-1">Current Password</label>
-              <input id="pw-current" type="password" required autocomplete="current-password"
-                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
+              <label class="block text-slate-400 text-xs font-semibold uppercase tracking-wide mb-1.5">Ticket ID</label>
+              <input id="scan-input" type="text" placeholder="Scan QR or type Ticket ID (e.g. A1B2C3D4)" maxlength="8" autocomplete="off"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-lg font-mono uppercase placeholder-slate-600 text-center tracking-widest" />
+              <p class="text-slate-600 text-xs mt-1.5 text-center">Most QR scanners act as keyboard — input auto-submits</p>
             </div>
-            <div>
-              <label class="block text-slate-400 text-xs uppercase mb-1">New Password</label>
-              <input id="pw-new" type="password" required autocomplete="new-password" minlength="6"
-                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-slate-400 text-xs uppercase mb-1">Confirm New Password</label>
-              <input id="pw-confirm" type="password" required autocomplete="new-password"
-                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
-            </div>
-            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2.5 rounded-lg transition">Update Password</button>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3 rounded-xl transition text-base">
+              ✓ CHECK IN PLAYER
+            </button>
           </form>
         </div>
 
-        <!-- Platform Info -->
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
-          <h3 class="font-bold text-white mb-4">ℹ️ Platform Info</h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-slate-400">Platform</span><span class="font-semibold">East Arena Gaming Tournament</span></div>
-            <div class="flex justify-between"><span class="text-slate-400">Payment Method</span><span class="font-semibold text-yellow-400">Manual Bank Transfer</span></div>
-            <div class="flex justify-between"><span class="text-slate-400">Paystack</span><span class="text-slate-500">Ready to integrate (future)</span></div>
-            <div class="flex justify-between"><span class="text-slate-400">Games Supported</span><span class="font-semibold">FIFA · More coming</span></div>
-            <div class="flex justify-between"><span class="text-slate-400">Current Season</span><span class="font-semibold text-amber-400">Season 1</span></div>
+        <!-- Scan Result -->
+        <div id="scan-result" class="hidden rounded-2xl p-5 text-center mb-5 fade-in">
+          <div id="scan-result-icon" class="text-5xl mb-3"></div>
+          <div id="scan-result-title" class="text-xl font-black mb-1"></div>
+          <div id="scan-result-player" class="text-lg text-amber-400 font-bold mb-1"></div>
+          <div id="scan-result-detail" class="text-slate-400 text-sm"></div>
+        </div>
+
+        <!-- Recent Check-ins -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-black text-white">Recent Check-ins</h3>
+            <button onclick="loadRecentCheckins()" class="text-slate-500 hover:text-white text-sm transition">🔄</button>
+          </div>
+          <div id="recent-checkins"><p class="text-slate-600 text-sm">No recent check-ins</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TOURNAMENTS ──────────────────────────────────────────────── -->
+    <div id="tab-tournaments" class="tab-content hidden">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-xl font-black text-white">Tournament Management</h2>
+        <button id="add-tournament-btn" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl text-sm transition">+ Add Tournament</button>
+      </div>
+      <div id="tournament-list" class="space-y-4"><p class="text-slate-500">Loading...</p></div>
+    </div>
+
+    <!-- ── ANNOUNCEMENTS ────────────────────────────────────────────── -->
+    <div id="tab-announcements" class="tab-content hidden">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-xl font-black text-white">Announcements</h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Create -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-black text-white mb-4">📢 Post Announcement</h3>
+          <div id="ann-error" class="hidden bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-3 text-sm mb-3"></div>
+          <div id="ann-success" class="hidden bg-green-500/10 border border-green-500/30 text-green-300 rounded-xl p-3 text-sm mb-3"></div>
+          <form id="ann-form" class="space-y-3">
+            <div>
+              <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Title</label>
+              <input id="ann-title" type="text" placeholder="Announcement title" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Message</label>
+              <textarea id="ann-message" placeholder="Your announcement message..." rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Type</label>
+              <select id="ann-type" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+                <option value="info">ℹ️ Info</option>
+                <option value="warning">⚠️ Warning</option>
+                <option value="success">✅ Success</option>
+                <option value="error">❌ Important</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition">Post Announcement</button>
+          </form>
+        </div>
+
+        <!-- List -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-black text-white mb-4">Active Announcements</h3>
+          <div id="ann-list"><p class="text-slate-500 text-sm">No announcements</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ────────────────────────────────────────────────── -->
+    <div id="tab-settings" class="tab-content hidden">
+      <h2 class="text-xl font-black text-white mb-6">Settings</h2>
+      <div class="max-w-lg space-y-5">
+
+        <!-- Change Password -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+          <h3 class="font-black text-white mb-1">🔒 Change Admin Password</h3>
+          <p class="text-slate-500 text-sm mb-5">After changing you will be logged out and must re-login.</p>
+          <div id="pw-success" class="hidden bg-green-500/10 border border-green-500/30 text-green-300 rounded-xl p-3 text-sm mb-4"></div>
+          <div id="pw-error" class="hidden bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-3 text-sm mb-4"></div>
+          <form id="change-pw-form" class="space-y-3">
+            <div>
+              <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Current Password</label>
+              <input id="pw-current" type="password" required autocomplete="current-password"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">New Password (min 8 chars)</label>
+              <input id="pw-new" type="password" required autocomplete="new-password" minlength="8"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Confirm New Password</label>
+              <input id="pw-confirm" type="password" required autocomplete="new-password"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white" />
+            </div>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl transition">Update Password</button>
+          </form>
+        </div>
+
+        <!-- Email Status -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+          <h3 class="font-black text-white mb-4">📧 Email System</h3>
+          <div id="email-config-status" class="text-slate-500 text-sm">Checking...</div>
+          <div class="mt-4 bg-slate-800/50 rounded-xl p-4 text-xs text-slate-500 space-y-1">
+            <p class="font-semibold text-slate-400">To enable emails, set these environment variables:</p>
+            <p><code class="text-amber-400">SMTP_HOST</code> — e.g. smtp.gmail.com</p>
+            <p><code class="text-amber-400">SMTP_PORT</code> — e.g. 587</p>
+            <p><code class="text-amber-400">SMTP_USER</code> — your email address</p>
+            <p><code class="text-amber-400">SMTP_PASS</code> — your email password or app password</p>
+            <p><code class="text-amber-400">EMAIL_FROM</code> — sender name &lt;email&gt;</p>
           </div>
         </div>
+
+        <!-- Send Reminders -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+          <h3 class="font-black text-white mb-1">📣 Send Event Reminders</h3>
+          <p class="text-slate-500 text-sm mb-4">Send a reminder email to all confirmed players of a tournament.</p>
+          <div id="reminder-result" class="hidden bg-blue-500/10 border border-blue-500/30 text-blue-300 rounded-xl p-3 text-sm mb-4"></div>
+          <div class="flex gap-2">
+            <select id="reminder-tournament" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
+              <option value="">Select tournament...</option>
+            </select>
+            <button id="send-reminders-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition">Send Reminders</button>
+          </div>
+        </div>
+
+        <!-- Platform Info -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+          <h3 class="font-black text-white mb-4">ℹ️ Platform Info</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Platform</span><span class="font-semibold">East Arena Gaming Tournament</span></div>
+            <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Payment Method</span><span class="font-semibold text-yellow-400">Manual Bank Transfer</span></div>
+            <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Games Supported</span><span class="font-semibold">FIFA · CoD · Mortal Kombat · Casual</span></div>
+            <div class="flex justify-between py-1.5"><span class="text-slate-500">Season</span><span class="font-semibold text-amber-400">Season 1 · 2026</span></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- TOURNAMENT MODAL -->
-<div id="tournament-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-  <div class="bg-slate-800 border border-amber-500/30 rounded-xl w-full max-w-lg p-6 my-4">
+<!-- Toast -->
+<div id="toast" class="fixed bottom-5 right-5 hidden z-50">
+  <div id="toast-inner" class="px-5 py-3 rounded-xl font-bold text-sm shadow-2xl border max-w-xs"></div>
+</div>
+
+<!-- Tournament Modal -->
+<div id="tournament-modal" class="hidden fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4 overflow-y-auto">
+  <div class="bg-slate-900 border border-amber-500/20 rounded-2xl w-full max-w-lg p-6 my-4 fade-in">
     <h3 id="modal-title" class="text-xl font-black text-amber-400 mb-5">Add Tournament</h3>
     <form id="tournament-form" class="space-y-4">
       <input type="hidden" id="t-edit-id" value="" />
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-3">
         <div class="col-span-2">
-          <label class="block text-slate-400 text-xs uppercase mb-1">Tournament Name</label>
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Tournament Name</label>
           <input id="t-name" type="text" required placeholder="East Arena Championship S2"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Game</label>
-          <select id="t-game" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Game</label>
+          <select id="t-game" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
             <option value="FIFA">⚽ FIFA</option>
             <option value="CODM">🔫 Call of Duty Mobile</option>
+            <option value="Mortal Kombat">🥊 Mortal Kombat</option>
+            <option value="Casual">🎮 Casual Gaming</option>
             <option value="Free Fire">🔥 Free Fire</option>
             <option value="PUBG">🎯 PUBG Mobile</option>
-            <option value="eFootball">⚽ eFootball</option>
             <option value="Other">🎮 Other</option>
           </select>
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Status</label>
-          <select id="t-status" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Status</label>
+          <select id="t-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm">
             <option value="active">Active (Open)</option>
             <option value="upcoming">Upcoming</option>
             <option value="closed">Closed</option>
@@ -210,45 +361,42 @@
           </select>
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Date</label>
-          <input id="t-date" type="date" required
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Date</label>
+          <input id="t-date" type="date" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Max Players</label>
-          <input id="t-maxplayers" type="number" min="2" value="16" required
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Max Players</label>
+          <input id="t-maxplayers" type="number" min="2" value="16" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div class="col-span-2">
-          <label class="block text-slate-400 text-xs uppercase mb-1">Entry Fee (₦)</label>
-          <input id="t-fee" type="number" min="0" placeholder="30000" required
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Entry Fee (₦) — set 0 for free</label>
+          <input id="t-fee" type="number" min="0" placeholder="30000 or 0 for free" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">1st Prize (₦)</label>
-          <input id="t-p1" type="number" min="0" placeholder="150000"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">1st Prize (₦)</label>
+          <input id="t-p1" type="number" min="0" placeholder="150000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">2nd Prize (₦)</label>
-          <input id="t-p2" type="number" min="0" placeholder="80000"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">2nd Prize (₦)</label>
+          <input id="t-p2" type="number" min="0" placeholder="80000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">3rd Prize (₦)</label>
-          <input id="t-p3" type="number" min="0" placeholder="40000"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">3rd Prize (₦)</label>
+          <input id="t-p3" type="number" min="0" placeholder="40000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Stream Link</label>
-          <input id="t-twitch" type="text" placeholder="https://twitch.tv/..."
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Stream Link</label>
+          <input id="t-twitch" type="text" placeholder="https://twitch.tv/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-slate-400 text-xs uppercase font-semibold tracking-wide mb-1">Description (optional)</label>
+          <textarea id="t-desc" rows="2" placeholder="Short tournament description..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm resize-none"></textarea>
         </div>
       </div>
-      <div id="modal-error" class="hidden text-red-300 bg-red-500/20 border border-red-500 rounded p-2 text-sm"></div>
+      <div id="modal-error" class="hidden text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-sm"></div>
       <div class="flex gap-3 pt-2">
-        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2 rounded-lg transition">Save Tournament</button>
-        <button type="button" id="modal-cancel" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg transition">Cancel</button>
+        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl transition">Save Tournament</button>
+        <button type="button" id="modal-cancel" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl transition">Cancel</button>
       </div>
     </form>
   </div>
@@ -256,16 +404,21 @@
 
 <script>
 let token = localStorage.getItem('ea_admin_token') || '';
+let recentCheckins = [];
 
+// ── API Helper ─────────────────────────────────────────────────────────
 async function api(method, path, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(path, opts);
-  const data = await res.json();
-  if (res.status === 401) { logout(); return {}; }
-  return { ok: res.ok, data };
+  try {
+    const res = await fetch(path, opts);
+    const data = await res.json();
+    if (res.status === 401) { logout(); return { ok: false, data: {} }; }
+    return { ok: res.ok, status: res.status, data };
+  } catch { return { ok: false, data: { error: 'Network error' } }; }
 }
 
+// ── Auth ───────────────────────────────────────────────────────────────
 async function checkAuth() {
   if (!token) return showLogin();
   const { ok } = await api('GET', '/api/admin/check');
@@ -278,10 +431,12 @@ function showLogin() {
   document.getElementById('admin-app').classList.add('hidden');
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('admin-app').classList.remove('hidden');
-  loadOverview(); loadRegistrations(); loadTournaments();
+  loadOverview();
+  loadTournamentsForFilters();
+  checkEmailStatus();
 }
 
 function logout() { api('POST', '/api/admin/logout'); showLogin(); }
@@ -289,7 +444,9 @@ function logout() { api('POST', '/api/admin/logout'); showLogin(); }
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
   errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Logging in...';
   const username = document.getElementById('login-user').value;
   const password = document.getElementById('login-pass').value;
   const res = await fetch('/api/admin/login', {
@@ -297,6 +454,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     body: JSON.stringify({ username, password })
   });
   const data = await res.json();
+  btn.disabled = false; btn.textContent = 'LOGIN';
   if (res.ok && data.token) {
     token = data.token; localStorage.setItem('ea_admin_token', token); showApp();
   } else {
@@ -306,65 +464,101 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
 document.getElementById('logout-btn').addEventListener('click', logout);
 
-// Tabs
+// ── Tabs ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => {
-      b.classList.remove('tab-active'); b.classList.add('text-slate-400'); b.classList.remove('text-amber-400');
+      b.classList.remove('tab-active'); b.classList.add('text-slate-500'); b.classList.remove('text-amber-400');
     });
-    btn.classList.add('tab-active', 'text-amber-400'); btn.classList.remove('text-slate-400');
+    btn.classList.add('tab-active', 'text-amber-400'); btn.classList.remove('text-slate-500');
     const tab = btn.dataset.tab;
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
     if (tab === 'registrations') loadRegistrations();
     if (tab === 'tournaments')   loadTournaments();
     if (tab === 'overview')      loadOverview();
+    if (tab === 'checkin')       loadRecentCheckins();
+    if (tab === 'announcements') loadAnnouncements();
+    if (tab === 'settings')      loadSettingsData();
   });
 });
 
-// ── Overview ─────────────────────────────────────────────────────────
+// ── Email Status ──────────────────────────────────────────────────────
+async function checkEmailStatus() {
+  const { ok, data } = await api('GET', '/api/admin/email-status');
+  if (ok) {
+    const dot = document.getElementById('email-status-dot');
+    if (data.configured) dot.classList.remove('hidden');
+  }
+}
+
+// ── Overview ──────────────────────────────────────────────────────────
 async function loadOverview() {
   const { data: stats } = await api('GET', '/api/admin/stats');
-  if (!stats) return;
+  if (!stats || !stats.total === undefined) return;
+
   const cards = [
-    { label:'Total',      value: stats.total,     color:'text-white',     bg:'bg-slate-700' },
-    { label:'Confirmed',  value: stats.confirmed,  color:'text-green-400', bg:'bg-green-500/10' },
-    { label:'Pending',    value: stats.pending,    color:'text-yellow-400',bg:'bg-yellow-500/10' },
-    { label:'Rejected',   value: stats.rejected,   color:'text-red-400',   bg:'bg-red-500/10' },
-    { label:'Checked In', value: stats.checkedIn,  color:'text-teal-400',  bg:'bg-teal-500/10' },
-    { label:'Revenue',    value:'₦' + Number(stats.revenue).toLocaleString(), color:'text-amber-400', bg:'bg-amber-500/10' },
+    { label:'Total',      value: stats.total,     color:'text-white',      bg:'bg-slate-800 border-slate-700' },
+    { label:'Confirmed',  value: stats.confirmed,  color:'text-green-400',  bg:'bg-green-500/5 border-green-500/20' },
+    { label:'Pending',    value: stats.pending,    color:'text-yellow-400', bg:'bg-yellow-500/5 border-yellow-500/20' },
+    { label:'Rejected',   value: stats.rejected,   color:'text-red-400',    bg:'bg-red-500/5 border-red-500/20' },
+    { label:'Checked In', value: stats.checkedIn,  color:'text-teal-400',   bg:'bg-teal-500/5 border-teal-500/20' },
+    { label:'Revenue',    value: '₦'+Number(stats.revenue).toLocaleString(), color:'text-amber-400', bg:'bg-amber-500/5 border-amber-500/20' },
   ];
   document.getElementById('stats-grid').innerHTML = cards.map(c => `
-    <div class="rounded-xl border border-slate-700 ${c.bg} p-4 text-center">
+    <div class="rounded-2xl border ${c.bg} p-4 text-center">
       <div class="text-2xl font-black ${c.color}">${c.value}</div>
-      <div class="text-slate-400 text-xs uppercase mt-1">${c.label}</div>
+      <div class="text-slate-500 text-xs uppercase mt-1 font-semibold tracking-wide">${c.label}</div>
     </div>`).join('');
+
+  // Revenue breakdown
+  if (stats.byTournament && stats.byTournament.length) {
+    document.getElementById('revenue-breakdown').innerHTML = `
+      <h3 class="font-black text-white mb-4">💰 Revenue by Tournament</h3>
+      <div class="space-y-2">
+        ${stats.byTournament.map(t => `
+        <div class="flex justify-between items-center py-2 border-b border-slate-800 last:border-0 text-sm">
+          <div>
+            <span class="font-semibold text-white">${esc(t.name)}</span>
+            <span class="text-slate-500 text-xs ml-2">${esc(t.game)}</span>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-green-400">₦${Number(t.revenue).toLocaleString()}</span>
+            <span class="text-slate-500 text-xs ml-2">${t.confirmed} players</span>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  }
 
   const { data: regs } = await api('GET', '/api/admin/registrations?status=pending');
   const pending = Array.isArray(regs) ? regs.filter(r => r.paymentReference) : [];
   const el = document.getElementById('pending-list');
-  if (pending.length === 0) { el.innerHTML = '<p class="text-slate-400 text-sm">No pending payments awaiting review.</p>'; return; }
-  el.innerHTML = pending.slice(0, 10).map(r => `
-    <div class="flex items-center justify-between bg-slate-700/50 rounded-lg p-3 flex-wrap gap-2">
+  if (pending.length === 0) {
+    el.innerHTML = '<p class="text-slate-500 text-sm">No pending payments awaiting review.</p>';
+    return;
+  }
+  el.innerHTML = pending.slice(0, 15).map(r => `
+    <div class="flex items-center justify-between bg-slate-800/40 border border-slate-800 rounded-xl p-3 flex-wrap gap-2 mb-2">
       <div>
         <div class="font-bold text-white">${esc(r.playerName)} <span class="text-amber-400 font-mono text-sm">@${esc(r.gamertag)}</span></div>
         <div class="text-xs text-slate-400 mt-0.5">${esc(r.tournamentName)} · Ref: <span class="font-mono text-yellow-300">${esc(r.paymentReference)}</span></div>
-        <div class="text-xs text-slate-500">Ticket: ${r.ticketId} · ${new Date(r.registeredAt).toLocaleDateString()}</div>
+        <div class="text-xs text-slate-600">Ticket: ${r.ticketId} · ${new Date(r.registeredAt).toLocaleDateString()}</div>
       </div>
       <div class="flex gap-2">
-        <button onclick="approvePayment('${r.ticketId}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition">✓ Approve</button>
-        <button onclick="rejectPayment('${r.ticketId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded transition">✗ Reject</button>
+        <button onclick="approvePayment('${r.ticketId}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">✓ Approve</button>
+        <button onclick="rejectPayment('${r.ticketId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition">✗ Reject</button>
       </div>
     </div>`).join('');
 }
+
+document.getElementById('refresh-overview').addEventListener('click', loadOverview);
 
 document.getElementById('export-btn').addEventListener('click', async () => {
   const res = await fetch('/api/admin/export', { headers: { Authorization: 'Bearer ' + token } });
   if (!res.ok) return;
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'east-arena-backup.json'; a.click();
+  const a = document.createElement('a'); a.href = url; a.download = 'east-arena-backup.json'; a.click();
   URL.revokeObjectURL(url);
   showToast('Backup downloaded ✓', 'green');
 });
@@ -373,9 +567,11 @@ document.getElementById('export-btn').addEventListener('click', async () => {
 async function loadRegistrations() {
   const search = document.getElementById('search-input').value;
   const status = document.getElementById('status-filter').value;
+  const tournamentId = document.getElementById('tournament-filter').value;
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (status) params.set('status', status);
+  if (tournamentId) params.set('tournamentId', tournamentId);
   const { data: regs } = await api('GET', '/api/admin/registrations?' + params);
   renderRegsTable(Array.isArray(regs) ? regs : []);
 }
@@ -383,182 +579,373 @@ async function loadRegistrations() {
 function renderRegsTable(regs) {
   document.getElementById('regs-count').textContent = regs.length + ' registration(s)';
   if (!regs.length) {
-    document.getElementById('regs-tbody').innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">No registrations found.</td></tr>';
+    document.getElementById('regs-tbody').innerHTML = '<tr><td colspan="10" class="px-4 py-10 text-center text-slate-500">No registrations found.</td></tr>';
     return;
   }
   const badge = s => {
-    const c = { confirmed:'bg-green-600', pending:'bg-yellow-500 text-slate-900', rejected:'bg-red-600' };
-    return `<span class="px-2 py-0.5 rounded text-xs font-bold ${c[s]||'bg-slate-600'}">${s}</span>`;
+    const c = { confirmed:'status-confirmed', pending:'status-pending', rejected:'status-rejected' };
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-bold ${c[s]||'bg-slate-700 text-slate-300'}">${s}</span>`;
   };
   document.getElementById('regs-tbody').innerHTML = regs.map(r => `
-    <tr class="hover:bg-slate-800/40 transition">
-      <td class="px-4 py-3"><div class="font-semibold">${esc(r.playerName)}</div><div class="text-xs text-slate-400">${esc(r.phone)}</div></td>
+    <tr class="hover:bg-slate-800/20 transition">
+      <td class="px-4 py-3"><div class="font-semibold text-white text-sm">${esc(r.playerName)}</div><div class="text-xs text-slate-500">${esc(r.phone)}</div></td>
       <td class="px-4 py-3 text-amber-400 font-mono text-sm">${esc(r.gamertag)}</td>
+      <td class="px-4 py-3 text-slate-400 text-xs max-w-[140px] truncate" title="${esc(r.email||'')}">${esc(r.email||'—')}</td>
       <td class="px-4 py-3 text-slate-300 text-xs">${esc(r.tournamentName)}</td>
       <td class="px-4 py-3"><a href="/ticket/${r.ticketId}" target="_blank" class="font-mono text-amber-400 hover:underline text-xs">${r.ticketId}</a></td>
-      <td class="px-4 py-3 font-mono text-xs text-yellow-300 max-w-[120px] truncate" title="${esc(r.paymentReference||'')}">${esc(r.paymentReference||'—')}</td>
+      <td class="px-4 py-3 font-mono text-xs text-yellow-300 max-w-[100px] truncate" title="${esc(r.paymentReference||'')}">${esc(r.paymentReference||'—')}</td>
       <td class="px-4 py-3">${badge(r.paymentStatus)}</td>
-      <td class="px-4 py-3 text-center">${r.checkedIn ? '<span class="text-green-400 text-xs font-bold">✓</span>' : '<span class="text-slate-600">—</span>'}</td>
-      <td class="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">${new Date(r.registeredAt).toLocaleDateString()}</td>
+      <td class="px-4 py-3 text-center">${r.checkedIn ? '<span class="text-green-400 text-sm">✓</span>' : '<span class="text-slate-700">—</span>'}</td>
+      <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">${new Date(r.registeredAt).toLocaleDateString()}</td>
       <td class="px-4 py-3">
         <div class="flex gap-1 flex-wrap">
-          ${r.paymentStatus==='pending' && r.paymentReference ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded">✓</button>` : ''}
-          ${r.paymentStatus==='pending' ? `<button onclick="rejectPayment('${r.ticketId}')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded">✗</button>` : ''}
-          ${r.paymentStatus==='confirmed' && !r.checkedIn ? `<button onclick="checkinPlayer('${r.ticketId}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded">In</button>` : ''}
-          <button onclick="deletePlayer('${r.id}','${esc(r.playerName)}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded transition" title="Delete this player">🗑 Delete</button>
+          ${r.paymentStatus==='pending' && r.paymentReference ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">✓</button>` : ''}
+          ${r.paymentStatus==='pending' ? `<button onclick="rejectPayment('${r.ticketId}')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition">✗</button>` : ''}
+          ${r.paymentStatus==='confirmed' && !r.checkedIn ? `<button onclick="checkinPlayer('${r.ticketId}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg transition">In</button>` : ''}
+          <button onclick="deletePlayer('${r.id}','${esc(r.playerName)}')" class="px-2 py-1 bg-red-900/60 hover:bg-red-700 text-red-300 text-xs rounded-lg transition">🗑</button>
         </div>
       </td>
     </tr>`).join('');
 }
 
+async function loadTournamentsForFilters() {
+  const { data } = await api('GET', '/api/admin/tournaments');
+  if (!Array.isArray(data)) return;
+  const sel = document.getElementById('tournament-filter');
+  data.forEach(t => {
+    const o = document.createElement('option'); o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  // Also populate reminder tournament select
+  const remSel = document.getElementById('reminder-tournament');
+  if (remSel) data.forEach(t => {
+    const o = document.createElement('option'); o.value = t.id; o.textContent = t.name;
+    remSel.appendChild(o);
+  });
+}
+
 document.getElementById('search-input').addEventListener('input', debounce(loadRegistrations, 300));
 document.getElementById('status-filter').addEventListener('change', loadRegistrations);
+document.getElementById('tournament-filter').addEventListener('change', loadRegistrations);
 document.getElementById('refresh-regs').addEventListener('click', loadRegistrations);
 
 async function approvePayment(tid) {
-  if (!confirm('Approve payment for ' + tid + '?')) return;
-  const { ok } = await api('POST', '/api/admin/approve/' + tid);
-  if (ok) { showToast('Payment approved ✓', 'green'); loadRegistrations(); loadOverview(); }
+  if (!confirm('Approve payment for ticket ' + tid + '?')) return;
+  const { ok, data } = await api('POST', '/api/admin/approve/' + tid);
+  if (ok) { showToast('✓ Payment approved — email sent', 'green'); loadRegistrations(); loadOverview(); }
+  else showToast(data.error || 'Failed', 'red');
 }
+
 async function rejectPayment(tid) {
-  if (!confirm('Reject payment for ' + tid + '?')) return;
-  const { ok } = await api('POST', '/api/admin/reject/' + tid);
-  if (ok) { showToast('Payment rejected', 'red'); loadRegistrations(); loadOverview(); }
+  if (!confirm('Reject payment for ticket ' + tid + '? This will notify the player.')) return;
+  const { ok, data } = await api('POST', '/api/admin/reject/' + tid);
+  if (ok) { showToast('✗ Payment rejected', 'red'); loadRegistrations(); loadOverview(); }
+  else showToast(data.error || 'Failed', 'red');
 }
+
 async function checkinPlayer(tid) {
-  if (!confirm('Check in ticket ' + tid + '?')) return;
   const { ok, data } = await api('POST', '/api/admin/checkin/' + tid);
-  if (ok) { showToast('Checked in ✓', 'green'); loadRegistrations(); }
-  else showToast(data.error || 'Error', 'red');
+  if (ok) { showToast('✓ Checked in: ' + (data.player||tid), 'green'); loadRegistrations(); }
+  else showToast(data.error || 'Check-in failed', 'red');
 }
+
 async function deletePlayer(id, name) {
-  if (!confirm('⚠ DELETE PLAYER\n\nAre you sure you want to permanently delete "' + name + '"?\n\nThis cannot be undone and will free up their slot in the tournament.')) return;
-  const { ok, data } = await api('DELETE', '/api/admin/player/' + id);
-  if (ok) { showToast('Player "' + name + '" deleted', 'red'); loadRegistrations(); loadOverview(); }
-  else showToast((data && data.error) || 'Delete failed', 'red');
+  if (!confirm('Delete registration for ' + name + '? This cannot be undone.')) return;
+  const { ok } = await api('DELETE', '/api/admin/player/' + id);
+  if (ok) { showToast('Player deleted', 'red'); loadRegistrations(); loadOverview(); }
+}
+
+// ── Check-In Scanner ──────────────────────────────────────────────────
+let scanDebounceTimer = null;
+
+document.getElementById('scan-input').addEventListener('input', (e) => {
+  const val = e.target.value.toUpperCase().trim();
+  e.target.value = val;
+  // Auto-submit when 8 chars entered (typical QR scanner output)
+  if (val.length === 8) {
+    clearTimeout(scanDebounceTimer);
+    scanDebounceTimer = setTimeout(() => document.getElementById('scan-form').dispatchEvent(new Event('submit')), 150);
+  }
+});
+
+document.getElementById('scan-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const ticketId = document.getElementById('scan-input').value.trim().toUpperCase();
+  if (!ticketId) return;
+
+  const resultEl = document.getElementById('scan-result');
+  resultEl.className = 'rounded-2xl p-5 text-center mb-5 fade-in';
+
+  const { ok, data } = await api('POST', '/api/admin/scan', { ticketId });
+
+  const iconEl  = document.getElementById('scan-result-icon');
+  const titleEl = document.getElementById('scan-result-title');
+  const playerEl = document.getElementById('scan-result-player');
+  const detailEl = document.getElementById('scan-result-detail');
+
+  resultEl.classList.remove('hidden');
+
+  if (ok && data.success) {
+    resultEl.classList.add('scan-success');
+    iconEl.textContent = '✅';
+    titleEl.textContent = 'ENTRY GRANTED';
+    titleEl.className = 'text-xl font-black mb-1 text-green-400';
+    playerEl.textContent = data.player + ' (@' + data.gamertag + ')';
+    detailEl.textContent = (data.tournament || '') + ' · Checked in at ' + new Date(data.checkedInAt).toLocaleTimeString();
+    recentCheckins.unshift({ ...data, time: new Date() });
+    renderRecentCheckins();
+  } else {
+    const isDuplicate = data.status === 'duplicate';
+    const isNotFound  = data.status === 'not_found';
+    const isUnconfirmed = data.status === 'unconfirmed';
+    resultEl.classList.add(isDuplicate ? 'scan-warning' : 'scan-error');
+    iconEl.textContent = isDuplicate ? '⚠️' : isNotFound ? '❌' : '🚫';
+    titleEl.textContent = isDuplicate ? 'ALREADY CHECKED IN' : isNotFound ? 'TICKET NOT FOUND' : 'ENTRY DENIED';
+    titleEl.className = `text-xl font-black mb-1 ${isDuplicate ? 'text-yellow-400' : 'text-red-400'}`;
+    playerEl.textContent = data.player ? data.player + (data.gamertag ? ' (@' + data.gamertag + ')' : '') : '';
+    detailEl.textContent = isDuplicate ? ('Already checked in at ' + new Date(data.checkedInAt).toLocaleTimeString()) : (data.error || 'Unknown error');
+  }
+
+  // Clear input after 2s for next scan
+  setTimeout(() => {
+    document.getElementById('scan-input').value = '';
+    document.getElementById('scan-input').focus();
+  }, 2000);
+});
+
+function renderRecentCheckins() {
+  const el = document.getElementById('recent-checkins');
+  if (!recentCheckins.length) { el.innerHTML = '<p class="text-slate-600 text-sm">No recent check-ins</p>'; return; }
+  el.innerHTML = recentCheckins.slice(0, 10).map(c => `
+    <div class="flex justify-between items-center py-2 border-b border-slate-800 last:border-0 text-sm">
+      <div>
+        <span class="font-semibold text-white">${esc(c.player)}</span>
+        <span class="text-amber-400 text-xs ml-1">@${esc(c.gamertag)}</span>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-green-400 font-bold">✓ In</div>
+        <div class="text-xs text-slate-500">${new Date(c.time).toLocaleTimeString()}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function loadRecentCheckins() {
+  const { data: regs } = await api('GET', '/api/admin/registrations');
+  if (Array.isArray(regs)) {
+    const checked = regs.filter(r => r.checkedIn).sort((a,b) => new Date(b.checkedInAt) - new Date(a.checkedInAt)).slice(0,10);
+    recentCheckins = checked.map(r => ({ player: r.playerName, gamertag: r.gamertag, time: new Date(r.checkedInAt) }));
+    renderRecentCheckins();
+  }
 }
 
 // ── Tournaments ───────────────────────────────────────────────────────
 async function loadTournaments() {
-  const { data: list } = await api('GET', '/api/admin/tournaments');
-  if (!Array.isArray(list)) return;
-  const sc = { active:'text-green-400', upcoming:'text-yellow-400', closed:'text-red-400', inactive:'text-slate-500' };
-  const gameIcons = { FIFA:'⚽', CODM:'🔫', 'Free Fire':'🔥', PUBG:'🎯', eFootball:'⚽', Other:'🎮' };
-
-  document.getElementById('tournament-list').innerHTML = list.length === 0
-    ? '<p class="text-slate-400">No tournaments yet.</p>'
-    : list.map(t => `
-      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
-        <div class="flex justify-between items-start flex-wrap gap-3">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1 flex-wrap">
-              <span class="text-lg">${gameIcons[t.game]||'🎮'}</span>
-              <h3 class="font-bold text-white">${esc(t.name)}</h3>
-              <span class="text-xs font-bold uppercase ${sc[t.status]||'text-slate-400'}">${t.status}</span>
-            </div>
-            <div class="text-xs text-slate-500 mb-3">${esc(t.game||'FIFA')}</div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-              <div><div class="text-slate-400 text-xs">Date</div><div class="font-semibold">${new Date(t.date).toLocaleDateString()}</div></div>
-              <div><div class="text-slate-400 text-xs">Entry Fee</div><div class="font-semibold text-cyan-400">₦${Number(t.entryFee).toLocaleString()}</div></div>
-              <div><div class="text-slate-400 text-xs">Players</div><div class="font-semibold">${t.registrations.length} / ${t.maxPlayers}</div></div>
-              <div><div class="text-slate-400 text-xs">Prize Pool</div><div class="font-semibold text-green-400">₦${Number(t.prizePool.first+t.prizePool.second+t.prizePool.third).toLocaleString()}</div></div>
-            </div>
+  const { data: ts } = await api('GET', '/api/admin/tournaments');
+  if (!Array.isArray(ts)) return;
+  const el = document.getElementById('tournament-list');
+  if (!ts.length) { el.innerHTML = '<p class="text-slate-500">No tournaments.</p>'; return; }
+  el.innerHTML = ts.map(t => {
+    const isFree = t.entryFee === 0;
+    return `<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+      <div class="flex justify-between items-start flex-wrap gap-3">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-black text-white text-lg">${esc(t.name)}</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-bold ${t.status==='active' ? 'bg-green-500/20 text-green-400' : t.status==='upcoming' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700 text-slate-400'}">${t.status.toUpperCase()}</span>
           </div>
-          <div class="flex gap-2 flex-shrink-0">
-            <button onclick="editTournament(${JSON.stringify(t).replace(/"/g,'&quot;')})" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 text-sm font-bold rounded transition">Edit</button>
-            <button onclick="deleteTournament(${t.id},'${esc(t.name)}')" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-400 text-sm font-bold rounded transition">Delete</button>
-          </div>
+          <div class="text-slate-400 text-sm">${esc(t.game)} · ${new Date(t.date).toLocaleDateString()} · ${t.registrations.length}/${t.maxPlayers} players</div>
+          <div class="text-sm mt-1">${isFree ? '<span class="text-teal-400 font-bold">FREE Event</span>' : '<span class="text-amber-400 font-bold">₦'+Number(t.entryFee).toLocaleString()+'</span>'}</div>
         </div>
-      </div>`).join('');
+        <div class="flex gap-2">
+          <button onclick="editTournament(${t.id})" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition">✏️ Edit</button>
+          <button onclick="deleteTournament(${t.id},'${esc(t.name)}')" class="px-3 py-1.5 bg-red-900/50 hover:bg-red-700 text-red-300 text-xs font-bold rounded-lg transition">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-document.getElementById('add-tournament-btn').addEventListener('click', () => openModal());
-document.getElementById('modal-cancel').addEventListener('click', () => document.getElementById('tournament-modal').classList.add('hidden'));
-
-function openModal(t) {
-  document.getElementById('modal-title').textContent = t ? 'Edit Tournament' : 'Add Tournament';
-  document.getElementById('t-edit-id').value    = t ? t.id   : '';
-  document.getElementById('t-name').value       = t ? t.name : '';
-  document.getElementById('t-game').value       = t ? (t.game||'FIFA') : 'FIFA';
-  document.getElementById('t-date').value       = t ? t.date : '';
-  document.getElementById('t-maxplayers').value = t ? t.maxPlayers : 16;
-  document.getElementById('t-fee').value        = t ? t.entryFee : '';
-  document.getElementById('t-status').value     = t ? t.status : 'active';
-  document.getElementById('t-p1').value         = t ? t.prizePool.first  : '';
-  document.getElementById('t-p2').value         = t ? t.prizePool.second : '';
-  document.getElementById('t-p3').value         = t ? t.prizePool.third  : '';
-  document.getElementById('t-twitch').value     = t ? t.twitchLink : '';
-  document.getElementById('modal-error').classList.add('hidden');
+let tournamentsCache = [];
+async function editTournament(id) {
+  const { data: ts } = await api('GET', '/api/admin/tournaments');
+  tournamentsCache = Array.isArray(ts) ? ts : [];
+  const t = tournamentsCache.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('modal-title').textContent = 'Edit Tournament';
+  document.getElementById('t-edit-id').value = t.id;
+  document.getElementById('t-name').value = t.name;
+  document.getElementById('t-game').value = t.game;
+  document.getElementById('t-status').value = t.status;
+  document.getElementById('t-date').value = t.date;
+  document.getElementById('t-maxplayers').value = t.maxPlayers;
+  document.getElementById('t-fee').value = t.entryFee;
+  document.getElementById('t-p1').value = t.prizePool?.first || 0;
+  document.getElementById('t-p2').value = t.prizePool?.second || 0;
+  document.getElementById('t-p3').value = t.prizePool?.third || 0;
+  document.getElementById('t-twitch').value = t.twitchLink || '';
+  document.getElementById('t-desc').value = t.description || '';
   document.getElementById('tournament-modal').classList.remove('hidden');
 }
-function editTournament(t) { openModal(t); }
 
-async function deleteTournament(id, name) {
-  if (!confirm('Delete tournament "' + name + '"?')) return;
-  const { ok } = await api('DELETE', '/api/admin/tournaments/' + id);
-  if (ok) { showToast('Deleted', 'red'); loadTournaments(); }
-}
+document.getElementById('add-tournament-btn').addEventListener('click', () => {
+  document.getElementById('modal-title').textContent = 'Add Tournament';
+  document.getElementById('tournament-form').reset();
+  document.getElementById('t-edit-id').value = '';
+  document.getElementById('tournament-modal').classList.remove('hidden');
+});
+
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('tournament-modal').classList.add('hidden');
+});
+
+document.getElementById('tournament-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('tournament-modal')) document.getElementById('tournament-modal').classList.add('hidden');
+});
 
 document.getElementById('tournament-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('t-edit-id').value;
+  const errEl = document.getElementById('modal-error');
+  errEl.classList.add('hidden');
   const body = {
-    name:            document.getElementById('t-name').value,
-    game:            document.getElementById('t-game').value,
-    date:            document.getElementById('t-date').value,
-    entryFee:        document.getElementById('t-fee').value,
-    maxPlayers:      document.getElementById('t-maxplayers').value,
-    status:          document.getElementById('t-status').value,
-    prizePoolFirst:  document.getElementById('t-p1').value,
+    name: document.getElementById('t-name').value,
+    game: document.getElementById('t-game').value,
+    date: document.getElementById('t-date').value,
+    entryFee: document.getElementById('t-fee').value,
+    prizePoolFirst: document.getElementById('t-p1').value,
     prizePoolSecond: document.getElementById('t-p2').value,
-    prizePoolThird:  document.getElementById('t-p3').value,
-    twitchLink:      document.getElementById('t-twitch').value
+    prizePoolThird: document.getElementById('t-p3').value,
+    maxPlayers: document.getElementById('t-maxplayers').value,
+    twitchLink: document.getElementById('t-twitch').value,
+    status: document.getElementById('t-status').value,
+    description: document.getElementById('t-desc').value
   };
-  const { ok, data } = await api(id ? 'PUT' : 'POST', id ? '/api/admin/tournaments/' + id : '/api/admin/tournaments', body);
-  if (ok) { document.getElementById('tournament-modal').classList.add('hidden'); showToast(id ? 'Updated ✓' : 'Created ✓', 'green'); loadTournaments(); }
-  else { const el = document.getElementById('modal-error'); el.textContent = data.error || 'Error'; el.classList.remove('hidden'); }
-});
-
-// ── Settings ──────────────────────────────────────────────────────────
-document.getElementById('change-pw-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const succEl = document.getElementById('pw-success');
-  const errEl  = document.getElementById('pw-error');
-  succEl.classList.add('hidden'); errEl.classList.add('hidden');
-  const body = {
-    currentPassword: document.getElementById('pw-current').value,
-    newPassword:     document.getElementById('pw-new').value,
-    confirmPassword: document.getElementById('pw-confirm').value
-  };
-  const { ok, data } = await api('POST', '/api/admin/change-password', body);
+  const method = id ? 'PUT' : 'POST';
+  const path = id ? '/api/admin/tournaments/' + id : '/api/admin/tournaments';
+  const { ok, data } = await api(method, path, body);
   if (ok) {
-    succEl.textContent = 'Password updated! Logging you out...';
-    succEl.classList.remove('hidden');
-    document.getElementById('change-pw-form').reset();
-    setTimeout(() => logout(), 1800);
+    document.getElementById('tournament-modal').classList.add('hidden');
+    loadTournaments(); loadOverview();
+    showToast(id ? '✓ Tournament updated' : '✓ Tournament created', 'green');
   } else {
-    errEl.textContent = data.error || 'Failed to update password';
-    errEl.classList.remove('hidden');
+    errEl.textContent = data.error || 'Failed'; errEl.classList.remove('hidden');
   }
 });
 
-// ── Utils ─────────────────────────────────────────────────────────────
-function esc(s) { return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; }
-
-let toastT;
-function showToast(msg, color) {
-  clearTimeout(toastT);
-  document.getElementById('toast')?.remove();
-  const bg = color==='green' ? 'bg-green-600' : color==='red' ? 'bg-red-600' : 'bg-slate-700';
-  const el = document.createElement('div');
-  el.id = 'toast';
-  el.className = `fixed bottom-6 right-6 ${bg} text-white px-5 py-3 rounded-xl shadow-xl z-50 text-sm font-bold`;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  toastT = setTimeout(() => el.remove(), 3000);
+async function deleteTournament(id, name) {
+  if (!confirm('Delete "' + name + '"? This will remove the tournament but NOT its registrations.')) return;
+  const { ok } = await api('DELETE', '/api/admin/tournaments/' + id);
+  if (ok) { showToast('Tournament deleted', 'red'); loadTournaments(); loadOverview(); }
 }
 
+// ── Announcements ─────────────────────────────────────────────────────
+async function loadAnnouncements() {
+  const { data } = await api('GET', '/api/admin/announcements');
+  const el = document.getElementById('ann-list');
+  if (!Array.isArray(data) || !data.length) { el.innerHTML = '<p class="text-slate-500 text-sm">No announcements yet.</p>'; return; }
+  const colors = { info:'border-blue-500/20 text-blue-300', warning:'border-yellow-500/20 text-yellow-300', success:'border-green-500/20 text-green-300', error:'border-red-500/20 text-red-300' };
+  el.innerHTML = data.map(a => `
+    <div class="border rounded-xl p-3 mb-2 ${colors[a.type]||colors.info} bg-slate-800/30">
+      <div class="flex justify-between items-start gap-2">
+        <div>
+          <div class="font-bold text-sm text-white">${esc(a.title)}</div>
+          <div class="text-xs mt-0.5 opacity-80">${esc(a.message)}</div>
+          <div class="text-xs opacity-50 mt-1">${new Date(a.createdAt).toLocaleDateString()}</div>
+        </div>
+        <button onclick="deleteAnn('${a.id}')" class="text-slate-500 hover:text-red-400 transition text-sm">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('ann-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('ann-error');
+  const okEl  = document.getElementById('ann-success');
+  errEl.classList.add('hidden'); okEl.classList.add('hidden');
+  const { ok, data } = await api('POST', '/api/admin/announcements', {
+    title:   document.getElementById('ann-title').value,
+    message: document.getElementById('ann-message').value,
+    type:    document.getElementById('ann-type').value
+  });
+  if (ok) {
+    okEl.textContent = '✓ Announcement posted!'; okEl.classList.remove('hidden');
+    document.getElementById('ann-form').reset();
+    loadAnnouncements();
+    setTimeout(() => okEl.classList.add('hidden'), 3000);
+  } else {
+    errEl.textContent = data.error || 'Failed'; errEl.classList.remove('hidden');
+  }
+});
+
+async function deleteAnn(id) {
+  const { ok } = await api('DELETE', '/api/admin/announcements/' + id);
+  if (ok) loadAnnouncements();
+}
+
+// ── Settings ──────────────────────────────────────────────────────────
+async function loadSettingsData() {
+  const { ok, data } = await api('GET', '/api/admin/email-status');
+  if (ok) {
+    const el = document.getElementById('email-config-status');
+    el.innerHTML = data.configured
+      ? `<div class="flex items-center gap-2 text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span><span class="font-bold">Email system is configured and active</span></div><div class="text-slate-500 text-xs mt-1">Sending from: ${esc(data.from)}</div>`
+      : `<div class="flex items-center gap-2 text-yellow-400"><span class="w-2 h-2 bg-yellow-400 rounded-full inline-block"></span><span class="font-bold">Email not configured — notifications are disabled</span></div><div class="text-slate-500 text-xs mt-1">Set the SMTP environment variables below to enable emails.</div>`;
+  }
+}
+
+document.getElementById('change-pw-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw  = document.getElementById('pw-current').value;
+  const npw = document.getElementById('pw-new').value;
+  const cpw = document.getElementById('pw-confirm').value;
+  const errEl = document.getElementById('pw-error');
+  const okEl  = document.getElementById('pw-success');
+  errEl.classList.add('hidden'); okEl.classList.add('hidden');
+  const { ok, data } = await api('POST', '/api/admin/change-password', { currentPassword: pw, newPassword: npw, confirmPassword: cpw });
+  if (ok) {
+    okEl.textContent = data.message || 'Password updated.'; okEl.classList.remove('hidden');
+    setTimeout(() => logout(), 2000);
+  } else {
+    errEl.textContent = data.error || 'Failed'; errEl.classList.remove('hidden');
+  }
+});
+
+document.getElementById('send-reminders-btn').addEventListener('click', async () => {
+  const tid = document.getElementById('reminder-tournament').value;
+  if (!tid) { showToast('Select a tournament first', 'yellow'); return; }
+  const { ok, data } = await api('POST', '/api/admin/send-reminders/' + tid);
+  const el = document.getElementById('reminder-result');
+  el.textContent = ok ? (data.message || 'Reminders sent') : (data.error || 'Failed');
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+  if (ok) showToast(data.message, 'green');
+});
+
+// ── Utilities ────────────────────────────────────────────────────────
+function esc(s) {
+  return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function debounce(fn, ms) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+function showToast(msg, color = 'green') {
+  const toast = document.getElementById('toast');
+  const inner = document.getElementById('toast-inner');
+  const cls = {
+    green:  'bg-green-900/80 border-green-500/40 text-green-300',
+    red:    'bg-red-900/80 border-red-500/40 text-red-300',
+    yellow: 'bg-yellow-900/80 border-yellow-500/40 text-yellow-300',
+  };
+  inner.className = 'px-5 py-3 rounded-xl font-bold text-sm shadow-2xl border ' + (cls[color] || cls.green);
+  inner.textContent = msg;
+  toast.classList.remove('hidden');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.add('hidden'), 3500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
 checkAuth();
 </script>
 </body>

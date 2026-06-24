@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Page Not Found | East Arena Gaming</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0A0E14; color: #fff; font-family: system-ui, -apple-system, sans-serif; margin: 0; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    @keyframes glitch {
+      0%,100% { text-shadow: none; transform: translate(0); }
+      20% { text-shadow: -2px 0 #f59e0b; transform: translate(-1px, 0); }
+      40% { text-shadow: 2px 0 #00d9ff; transform: translate(1px, 0); }
+      60% { text-shadow: -2px 0 #f59e0b; transform: translate(0); }
+    }
+    @keyframes scanline { 0% { transform:translateY(-100%); } 100% { transform:translateY(100vh); } }
+    .float { animation: float 3s ease-in-out infinite; }
+    .glitch { animation: glitch 4s ease-in-out infinite; }
+    .scanline {
+      position: fixed; top: 0; left: 0; right: 0; height: 2px;
+      background: rgba(245,158,11,0.15);
+      animation: scanline 6s linear infinite;
+      pointer-events: none;
+    }
+    .grid-bg {
+      background-image: linear-gradient(rgba(245,158,11,.03) 1px,transparent 1px),
+                        linear-gradient(90deg,rgba(245,158,11,.03) 1px,transparent 1px);
+      background-size: 40px 40px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 grid-bg">
+  <div class="scanline"></div>
+
+  <div class="text-center max-w-lg">
+    <div class="text-[120px] font-black leading-none glitch mb-2" style="color:#f59e0b">404</div>
+    <div class="text-8xl float mb-6">😵</div>
+    <h1 class="text-3xl font-black text-white mb-3">PAGE NOT FOUND</h1>
+    <p class="text-slate-400 mb-2">You wandered into the wrong arena.</p>
+    <p class="text-slate-600 text-sm mb-10">The page you're looking for doesn't exist or has been moved.</p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/" class="px-8 py-3.5 bg-amber-500 text-black font-black rounded-xl hover:bg-amber-400 transition text-base">
+        🏠 Back to Home
+      </a>
+      <a href="/dashboard" class="px-7 py-3.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition border border-slate-700 text-base">
+        🎫 My Dashboard
+      </a>
+    </div>
+
+    <div class="mt-12 border-t border-slate-800 pt-8 text-slate-700 text-sm">
+      🏆 East Arena Gaming Tournament · Season 1
+    </div>
+  </div>
+</body>
+</html>
