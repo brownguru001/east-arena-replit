@@ -1,0 +1,155 @@
+I need you to upgrade the existing East Arena Tournament project into a working MVP.
+
+Do not rebuild from scratch. Keep the current framework and improve the existing code.
+
+Fix these critical issues:
+
+1. PAYMENT SYSTEM
+Current payment is fake and auto-confirms.
+
+Create an MVP manual payment flow:
+
+- Player selects ticket
+- Player sees payment instructions
+- Player submits payment reference/proof
+- Payment status becomes "pending"
+- Admin can approve or reject payment
+- Ticket only becomes active after admin approval
+
+Statuses:
+pending
+confirmed
+rejected
+
+
+2. QR CODE SYSTEM
+
+The backend already generates QR codes but frontend shows a placeholder.
+
+Fix this:
+
+- Display the real QR image on the ticket page
+- QR should link to:
+  /tickets/:ticketId
+
+Create the ticket page.
+
+When someone opens the ticket link show:
+
+Player name
+Ticket ID
+Ticket type
+Payment status
+QR code
+
+
+3. ADMIN DASHBOARD
+
+Create a protected admin dashboard.
+
+Route:
+
+/admin
+
+Features:
+
+- Admin login
+- View all registrations
+- View confirmed players
+- View pending payments
+- View total revenue
+- Search players
+- Approve payments
+- Reject payments
+- Delete players
+
+
+4. AUTHENTICATION
+
+Protect admin API routes.
+
+No public access to:
+
+/api/admin/*
+/api/dashboard/*
+
+Create simple admin authentication using environment variables.
+
+Example:
+
+ADMIN_USERNAME
+ADMIN_PASSWORD
+
+
+5. REGISTRATION FIXES
+
+Add:
+
+- Duplicate email check
+- Duplicate player check
+- Prevent same player registering twice
+
+
+6. TOURNAMENT LIMIT
+
+Registration must check tournament capacity.
+
+Example:
+
+Maximum players: 16
+
+If full:
+
+return:
+"Tournament is full"
+
+
+7. TICKET LOOKUP
+
+Create:
+
+/ticket/:ticketId
+
+Player can search ticket ID and view ticket.
+
+
+8. CHECK-IN SYSTEM
+
+QR scan should work.
+
+When QR is scanned:
+
+Open ticket page.
+
+Admin can mark:
+
+Checked in = true
+
+
+9. TOURNAMENT MANAGEMENT
+
+Create admin ability to:
+
+- Add tournament
+- Edit tournament
+- Set ticket price
+- Set max players
+- Activate/deactivate tournament
+
+
+10. DATA SAFETY
+
+Keep JSON storage but add:
+
+- Export data button
+- Backup function
+
+
+After changes:
+
+1. List every file you changed
+2. Explain what each change does
+3. Fix all JavaScript errors
+4. Make sure the app runs successfully
+
+Do not just explain. Implement the changes.
