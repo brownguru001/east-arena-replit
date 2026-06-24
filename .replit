@@ -38,4 +38,6 @@ externalPort = 80
 [userenv.shared]
 ADMIN_USERNAME = "Ceobruno"
 ADMIN_PASSWORD = "Onuachu247"
-APP_URL = "https://east-arena-replit.onrender.com"
+BANK_NAME = "Access Bank"
+ACCOUNT_NAME = "East Arena Gaming"
+ACCOUNT_NUMBER = "ENTER_YOUR_REAL_ACCOUNT_NUMBER"

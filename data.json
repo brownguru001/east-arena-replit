@@ -16,9 +16,7 @@
       "status": "active",
       "twitchLink": "https://twitch.tv/eastarena",
       "maxPlayers": 16,
-      "registrations": [
-        "6d93a3ca-60f9-448c-9122-9e630b9fc8b9"
-      ],
+      "registrations": [],
       "description": "Premium FIFA tournament. Entry fee required. Compete for real prize money."
     },
     {
@@ -73,24 +71,5 @@
       "description": "Mixed casual gaming night. Multiple games, no pressure, just fun."
     }
   ],
-  "registrations": [
-    {
-      "id": "6d93a3ca-60f9-448c-9122-9e630b9fc8b9",
-      "ticketId": "EAD4A0AE",
-      "playerName": "Onuachu Bruno Odinakachukwu",
-      "gamertag": "Bruno",
-      "phone": "08169328925",
-      "email": "bruno@example.com",
-      "location": "Lekki",
-      "tournamentId": 1,
-      "paymentStatus": "confirmed",
-      "paymentReference": "TRN20260623001",
-      "referenceSubmittedAt": "2026-06-23T23:54:06.993Z",
-      "checkedIn": false,
-      "checkedInAt": null,
-      "approvedAt": "2026-06-23T23:58:00.000Z",
-      "rejectedAt": null,
-      "registeredAt": "2026-06-23T23:54:06.993Z"
-    }
-  ]
+  "registrations": []
 }
