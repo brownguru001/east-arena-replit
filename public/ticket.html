@@ -279,34 +279,50 @@
     }
   }
 
-  // Render Paystack button vs manual section based on server config
+  // Render payment section using /api/public-settings — no Paystack probing
   function renderPaymentSection(data) {
     if (!data.tournament || data.tournament.entryFee === 0) return;
     show('payment-info');
 
-    // Check if Paystack is enabled by trying the endpoint
-    fetch('/api/payment/initialize', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ticketId: 'CHECK_ONLY' })
-    }).then(r => r.json()).then(d => {
-      // If error says "not configured" → Paystack disabled → show manual only
-      if (d.error && d.error.includes('not configured')) {
-        document.getElementById('manual-pay-section')?.classList.remove('hidden');
-      } else {
-        // Paystack is configured — show Paystack button; manual available via expand
-        document.getElementById('paystack-pay-section')?.classList.remove('hidden');
-        document.getElementById('manual-pay-section')?.classList.add('hidden');
-      }
-    }).catch(() => {
-      document.getElementById('manual-pay-section')?.classList.remove('hidden');
-    });
-
-    document.getElementById('payment-details').innerHTML =
-      `<div class="text-yellow-200 text-xs space-y-1">
-        <div>Bank: <strong>${esc(ticketData?.paymentDetails?.bankName || 'See admin')}</strong></div>
-        <div>Amount: <strong>₦${Number(data.tournament.entryFee).toLocaleString()}</strong></div>
-        <div>Use Ticket ID <strong class="font-mono text-amber-300">${ticketId}</strong> as narration</div>
-      </div>`;
+    fetch('/api/public-settings')
+      .then(r => r.json())
+      .then(s => {
+        if (s.paystackEnabled) {
+          show('paystack-pay-section');
+          hide('manual-pay-section');
+        } else {
+          show('manual-pay-section');
+          hide('paystack-pay-section');
+        }
+        const pd  = data.paymentDetails || {};
+        const bank    = pd.bankName      || s.bankName      || '—';
+        const name    = pd.accountName   || s.accountName   || '—';
+        const number  = pd.accountNumber || s.accountNumber || 'Contact admin';
+        const amount  = Number(data.tournament.entryFee).toLocaleString();
+        document.getElementById('payment-details').innerHTML =
+          `<div class="space-y-2 text-xs">
+            <div class="flex justify-between border-b border-yellow-500/10 pb-1.5">
+              <span class="text-slate-400">Bank</span>
+              <strong class="text-yellow-200">${esc(bank)}</strong>
+            </div>
+            <div class="flex justify-between border-b border-yellow-500/10 pb-1.5">
+              <span class="text-slate-400">Account Name</span>
+              <strong class="text-yellow-200">${esc(name)}</strong>
+            </div>
+            <div class="flex justify-between border-b border-yellow-500/10 pb-1.5">
+              <span class="text-slate-400">Account Number</span>
+              <strong class="font-mono text-amber-300 select-all text-sm">${esc(number)}</strong>
+            </div>
+            <div class="flex justify-between pb-1">
+              <span class="text-slate-400">Amount</span>
+              <strong class="text-green-400">₦${amount}</strong>
+            </div>
+            <div class="mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 text-slate-300">
+              ⚠ Use <strong class="text-amber-300 font-mono">${esc(ticketId)}</strong> as your bank transfer narration
+            </div>
+          </div>`;
+      })
+      .catch(() => { show('manual-pay-section'); });
   }
 
   function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

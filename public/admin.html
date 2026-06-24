@@ -370,12 +370,31 @@
           </div>
         </div>
 
+        <!-- Payment Mode -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+          <h3 class="font-black text-white mb-1">💳 Payment Method</h3>
+          <p class="text-slate-500 text-sm mb-4">Switch how players pay their entry fee. Paystack requires your API key to be configured.</p>
+          <div id="payment-mode-info" class="mb-4 text-sm text-slate-500">Loading...</div>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <button id="btn-manual" onclick="setPaymentMode('manual')"
+              class="py-3 rounded-xl font-bold text-sm transition border-2 border-transparent">
+              🏦 Manual Transfer
+            </button>
+            <button id="btn-online" onclick="setPaymentMode('online')"
+              class="py-3 rounded-xl font-bold text-sm transition border-2 border-transparent">
+              ⚡ Online (Paystack)
+            </button>
+          </div>
+          <div id="payment-mode-note" class="text-xs text-slate-600"></div>
+        </div>
+
         <!-- Platform Info -->
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
           <h3 class="font-black text-white mb-4">ℹ️ Platform Info</h3>
           <div class="space-y-2 text-sm">
             <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Platform</span><span class="font-semibold">East Arena Gaming Tournament</span></div>
-            <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Payment Method</span><span class="font-semibold text-yellow-400">Manual Bank Transfer</span></div>
+            <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Payment Method</span><span id="platform-payment-method" class="font-semibold text-yellow-400">—</span></div>
+            <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">App URL</span><span id="platform-app-url" class="font-semibold text-xs text-slate-300 truncate max-w-[180px]">—</span></div>
             <div class="flex justify-between py-1.5 border-b border-slate-800"><span class="text-slate-500">Games Supported</span><span class="font-semibold">FIFA · CoD · Mortal Kombat · Casual</span></div>
             <div class="flex justify-between py-1.5"><span class="text-slate-500">Season</span><span class="font-semibold text-amber-400">Season 1 · 2026</span></div>
           </div>
@@ -1071,12 +1090,57 @@ document.getElementById('test-email-btn').addEventListener('click', async () => 
 
 // ── Settings ──────────────────────────────────────────────────────────
 async function loadSettingsData() {
-  const { ok, data } = await api('GET', '/api/admin/email-status');
-  if (ok) {
+  const [{ ok: emailOk, data: emailData }, { ok: settingsOk, data: settingsData }] = await Promise.all([
+    api('GET', '/api/admin/email-status'),
+    api('GET', '/api/admin/settings'),
+  ]);
+
+  if (emailOk) {
     const el = document.getElementById('email-config-status');
-    el.innerHTML = data.configured
-      ? `<div class="flex items-center gap-2 text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span><span class="font-bold">Email system is configured and active</span></div><div class="text-slate-500 text-xs mt-1">Sending from: ${esc(data.from)}</div>`
-      : `<div class="flex items-center gap-2 text-yellow-400"><span class="w-2 h-2 bg-yellow-400 rounded-full inline-block"></span><span class="font-bold">Email not configured — notifications are disabled</span></div><div class="text-slate-500 text-xs mt-1">Set the SMTP environment variables below to enable emails.</div>`;
+    el.innerHTML = emailData.configured
+      ? `<div class="flex items-center gap-2 text-green-400"><span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span><span class="font-bold">Email system is configured and active</span></div><div class="text-slate-500 text-xs mt-1">Sending from: ${esc(emailData.from)}</div>`
+      : `<div class="flex items-center gap-2 text-yellow-400"><span class="w-2 h-2 bg-yellow-400 rounded-full inline-block"></span><span class="font-bold">Email not configured — notifications disabled</span></div><div class="text-slate-500 text-xs mt-1">Set EMAIL_USER + EMAIL_PASS in Secrets to enable emails.</div>`;
+  }
+
+  if (settingsOk) renderPaymentModeUI(settingsData);
+}
+
+function renderPaymentModeUI(s) {
+  const isManual = s.paymentMode === 'manual';
+  const manualBtn = document.getElementById('btn-manual');
+  const onlineBtn = document.getElementById('btn-online');
+  const noteEl    = document.getElementById('payment-mode-note');
+  const infoEl    = document.getElementById('payment-mode-info');
+
+  const activeClass   = 'bg-amber-500 text-black border-amber-400';
+  const inactiveClass = 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500';
+
+  if (manualBtn) { manualBtn.className = manualBtn.className.replace(/bg-\S+|text-\S+|border-\S+/g, '').trim(); manualBtn.classList.add(...(isManual ? activeClass : inactiveClass).split(' ')); }
+  if (onlineBtn) { onlineBtn.className = onlineBtn.className.replace(/bg-\S+|text-\S+|border-\S+/g, '').trim(); onlineBtn.classList.add(...(!isManual ? activeClass : inactiveClass).split(' ')); }
+
+  if (infoEl) {
+    const bankLine = s.bankName ? `<span class="text-white font-semibold">${esc(s.bankName)}</span> · <span class="font-mono text-amber-400">${esc(s.accountNumber || '—')}</span>` : '<span class="text-red-400">Bank details not set — add BANK_NAME, ACCOUNT_NAME, ACCOUNT_NUMBER to Secrets</span>';
+    infoEl.innerHTML = isManual
+      ? `<div class="flex items-center gap-2 text-green-400 mb-1"><span class="w-2 h-2 bg-green-400 rounded-full"></span><span class="font-bold">Active: Manual Bank Transfer</span></div><div class="text-slate-500 text-xs">Bank: ${bankLine}</div>`
+      : `<div class="flex items-center gap-2 ${s.paystackConfigured ? 'text-green-400' : 'text-yellow-400'} mb-1"><span class="w-2 h-2 ${s.paystackConfigured ? 'bg-green-400' : 'bg-yellow-400'} rounded-full"></span><span class="font-bold">Active: Online Paystack ${s.paystackConfigured ? '✓' : '— API key missing'}</span></div>`;
+  }
+
+  if (noteEl) noteEl.textContent = !isManual && !s.paystackConfigured ? '⚠ Add PAYSTACK_SECRET_KEY to Secrets to enable online payments.' : '';
+
+  const pmEl = document.getElementById('platform-payment-method');
+  if (pmEl) pmEl.textContent = isManual ? 'Manual Bank Transfer' : 'Online (Paystack)';
+  const urlEl = document.getElementById('platform-app-url');
+  if (urlEl) urlEl.textContent = s.appUrl || '—';
+}
+
+async function setPaymentMode(mode) {
+  const { ok, data } = await api('PATCH', '/api/admin/settings', { paymentMode: mode });
+  if (ok) {
+    showToast(mode === 'manual' ? '🏦 Switched to Manual Bank Transfer' : '⚡ Switched to Online Paystack', 'green');
+    const { ok: s2, data: d2 } = await api('GET', '/api/admin/settings');
+    if (s2) renderPaymentModeUI(d2);
+  } else {
+    showToast(data.error || 'Failed to update payment mode', 'red');
   }
 }
 

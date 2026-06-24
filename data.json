@@ -1,5 +1,7 @@
 {
-  "settings": {},
+  "settings": {
+    "paymentMode": "manual"
+  },
   "announcements": [],
   "tournaments": [
     {
@@ -16,7 +18,9 @@
       "status": "active",
       "twitchLink": "https://twitch.tv/eastarena",
       "maxPlayers": 16,
-      "registrations": [],
+      "registrations": [
+        "4f69f7cd-d19e-4e62-8fe7-d87a1243bbb7"
+      ],
       "description": "Premium FIFA tournament. Entry fee required. Compete for real prize money."
     },
     {
@@ -71,5 +75,24 @@
       "description": "Mixed casual gaming night. Multiple games, no pressure, just fun."
     }
   ],
-  "registrations": []
+  "registrations": [
+    {
+      "id": "4f69f7cd-d19e-4e62-8fe7-d87a1243bbb7",
+      "ticketId": "51D1B03F",
+      "playerName": "Test Player",
+      "gamertag": "TestGamer",
+      "phone": "08012345678",
+      "email": "test@eastarena.gg",
+      "location": "Lagos",
+      "tournamentId": 1,
+      "paymentStatus": "pending",
+      "paymentReference": null,
+      "referenceSubmittedAt": null,
+      "checkedIn": false,
+      "checkedInAt": null,
+      "approvedAt": null,
+      "rejectedAt": null,
+      "registeredAt": "2026-06-24T23:56:57.818Z"
+    }
+  ]
 }

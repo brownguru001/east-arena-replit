@@ -639,6 +639,11 @@ app.get('/api/ticket/:ticketId', async (req, res) => {
   res.json({
     ...regClean,
     qrCode,
+    paymentDetails: reg.paymentStatus === 'pending' ? {
+      bankName:      process.env.BANK_NAME      || null,
+      accountName:   process.env.ACCOUNT_NAME   || null,
+      accountNumber: process.env.ACCOUNT_NUMBER || null,
+    } : null,
     tournament: tournament
       ? { name: tournament.name, date: tournament.date, twitchLink: tournament.twitchLink, entryFee: tournament.entryFee, game: tournament.game }
       : null
@@ -718,9 +723,8 @@ app.post('/api/register', registrationLimiter, async (req, res) => {
     // Send confirmation email (non-blocking)
     emailRegistrationConfirmation(registration, tournament).catch(console.error);
 
-    const paymentProvider = process.env.PAYMENT_PROVIDER || 'manual';
-
-    const paystackEnabled = !!(process.env.PAYSTACK_SECRET_KEY);
+    const paymentMode     = data.settings?.paymentMode || 'manual';
+    const paystackEnabled = !isFree && paymentMode === 'online' && !!(process.env.PAYSTACK_SECRET_KEY);
 
     res.json({
       success: true,
@@ -793,6 +797,20 @@ app.get('/api/announcements', (req, res) => {
   const data = loadData();
   const active = (data.announcements || []).filter(a => a.active).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   res.json(active);
+});
+
+// Public settings — payment mode + bank details (safe for frontend, no secrets)
+app.get('/api/public-settings', (req, res) => {
+  const data = loadData();
+  const paymentMode     = data.settings?.paymentMode || 'manual';
+  const paystackEnabled = paymentMode === 'online' && !!(process.env.PAYSTACK_SECRET_KEY);
+  res.json({
+    paymentMode,
+    paystackEnabled,
+    bankName:      process.env.BANK_NAME      || null,
+    accountName:   process.env.ACCOUNT_NAME   || null,
+    accountNumber: process.env.ACCOUNT_NUMBER || null,
+  });
 });
 
 // ============================================================
@@ -1087,6 +1105,33 @@ app.delete('/api/admin/announcements/:id', requireAdmin, (req, res) => {
 app.get('/api/admin/email-status', requireAdmin, (req, res) => {
   const configured = !!(process.env.EMAIL_USER || process.env.SMTP_USER);
   res.json({ configured, from: EMAIL_FROM });
+});
+
+// Admin platform settings — GET + PATCH
+app.get('/api/admin/settings', requireAdmin, (req, res) => {
+  const data = loadData();
+  const paymentMode = data.settings?.paymentMode || 'manual';
+  res.json({
+    paymentMode,
+    paystackConfigured: !!(process.env.PAYSTACK_SECRET_KEY),
+    emailConfigured:    !!(process.env.EMAIL_USER || process.env.SMTP_USER),
+    appUrl:             getAppUrl(),
+    bankName:           process.env.BANK_NAME      || null,
+    accountName:        process.env.ACCOUNT_NAME   || null,
+    accountNumber:      process.env.ACCOUNT_NUMBER || null,
+  });
+});
+
+app.patch('/api/admin/settings', requireAdmin, (req, res) => {
+  const { paymentMode } = req.body;
+  if (paymentMode && !['manual', 'online'].includes(paymentMode)) {
+    return res.status(400).json({ error: 'paymentMode must be "manual" or "online"' });
+  }
+  const data = loadData();
+  if (!data.settings) data.settings = {};
+  if (paymentMode !== undefined) data.settings.paymentMode = paymentMode;
+  saveData(data);
+  res.json({ success: true, settings: data.settings });
 });
 
 // Test email — sends a test message to the admin's own email address
