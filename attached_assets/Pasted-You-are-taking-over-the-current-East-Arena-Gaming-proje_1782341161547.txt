@@ -1,0 +1,115 @@
+You are taking over the current East Arena Gaming project.
+
+Do not rebuild anything.
+
+First perform a complete audit of the existing project and tell me:
+
+1. What features are already completed and working.
+2. What features are partially built.
+3. What is still missing before launch.
+4. What are the biggest blockers right now.
+
+Mark each item:
+✅ Complete
+⚠️ Needs fixing
+❌ Missing
+
+After the audit, focus on production launch.
+
+## MAIN PRIORITY: CUSTOM DOMAIN SETUP
+
+The app is deployed on Railway.
+
+Custom domain:
+eastarenagaming.com.ng
+
+Prepare the codebase so the custom domain works correctly.
+
+Check and fix:
+
+* Remove any hardcoded Railway URLs
+* Create proper production BASE_URL / APP_URL configuration
+* Make all links use the custom domain
+* Update QR ticket links
+* Update email links
+* Update redirects
+* Update payment callback URLs
+* Update webhook URLs
+* Check authentication callbacks
+* Check CORS settings
+* Check HTTPS handling
+
+Confirm the app is ready to run on:
+
+https://eastarenagaming.com.ng
+
+## RAILWAY DEPLOYMENT CHECK
+
+Audit:
+
+* package.json scripts
+* start command
+* build command
+* PORT usage
+* environment variables
+* production mode
+
+Make sure Railway deployment will work with the custom domain.
+
+## CURRENT MVP FEATURES TO VERIFY
+
+Check:
+
+Registration:
+
+* User signup
+* User database
+* Validation
+
+Payments:
+
+* Paystack integration
+* Real payment verification
+* Transaction tracking
+
+Tickets:
+
+* QR generation
+* Ticket emails
+* Ticket verification
+
+Emails:
+
+* SMTP setup
+* Registration emails
+* Payment emails
+* QR ticket emails
+
+Analytics:
+
+* Visitor tracking
+* Registration tracking
+* Admin analytics
+
+Admin:
+
+* Protected dashboard
+* User management
+
+Security:
+
+* Secrets protected
+* Admin routes protected
+* User data protected
+
+After audit, do not explain only.
+
+Start fixing the highest priority issues automatically.
+
+When finished, give me:
+
+1. Completed fixes
+2. Remaining blockers
+3. Exact steps left before launch
+
+The goal is to finish the MVP and move to animation/voiceover/branding next.

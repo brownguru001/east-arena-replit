@@ -20,20 +20,21 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS — restricted to own origins in production
+// CORS — locked to known origins in production
 const allowedOrigins = [
   'http://localhost:5000',
-  process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
-  process.env.APP_URL || null,
+  process.env.REPLIT_DEV_DOMAIN      ? `https://${process.env.REPLIT_DEV_DOMAIN}`      : null,
+  process.env.RAILWAY_PUBLIC_DOMAIN  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`  : null,
+  process.env.APP_URL                ? process.env.APP_URL                              : null,
   'https://eastarenagaming.com.ng',
   'https://www.eastarenagaming.com.ng',
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // allow server-to-server / curl
-    if (allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
-    cb(null, true); // keep permissive on Replit preview; tighten after custom domain is live
+    if (!origin) return cb(null, true); // server-to-server / curl / Paystack webhooks
+    if (allowedOrigins.some(o => origin === o || origin.startsWith(o))) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true
 }));
@@ -536,10 +537,11 @@ function getAdminPassword() {
 }
 
 function getAppUrl() {
-  return process.env.APP_URL
-    || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null)
-    || process.env.RENDER_EXTERNAL_URL
-    || `http://localhost:${process.env.PORT || 5000}`;
+  if (process.env.APP_URL)               return process.env.APP_URL.replace(/\/$/, '');
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  if (process.env.REPLIT_DEV_DOMAIN)     return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  if (process.env.RENDER_EXTERNAL_URL)   return process.env.RENDER_EXTERNAL_URL;
+  return `http://localhost:${process.env.PORT || 5000}`;
 }
 
 function esc(str) {
