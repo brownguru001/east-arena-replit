@@ -8,6 +8,7 @@ const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -15,10 +16,30 @@ const app = express();
 // SECURITY HEADERS
 // ============================================================
 app.use(helmet({
-  contentSecurityPolicy: false, // Allow CDN scripts
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors());
+
+// CORS — restricted to own origins in production
+const allowedOrigins = [
+  'http://localhost:5000',
+  process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
+  process.env.APP_URL || null,
+  'https://eastarenagaming.com.ng',
+  'https://www.eastarenagaming.com.ng',
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // allow server-to-server / curl
+    if (allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
+    cb(null, true); // keep permissive on Replit preview; tighten after custom domain is live
+  },
+  credentials: true
+}));
+
+// Raw body capture for Paystack webhook (must be before express.json)
+app.use('/api/webhooks/paystack', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -250,6 +271,62 @@ async function emailEventReminder(reg, tournament) {
     emailBase(content),
     [{ filename: 'ticket-qr.png', content: qrBuffer, cid: 'qrcode' }]
   );
+}
+
+// ============================================================
+// PAYSTACK INTEGRATION
+// ============================================================
+async function paystackInitialize({ email, amountNaira, reference, callbackUrl, metadata }) {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) throw new Error('PAYSTACK_SECRET_KEY not configured');
+  const res = await fetch('https://api.paystack.co/transaction/initialize', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${secret}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      amount: amountNaira * 100, // Paystack uses kobo
+      reference,
+      callback_url: callbackUrl,
+      currency: 'NGN',
+      metadata: { custom_fields: [{ display_name: 'Ticket ID', variable_name: 'ticket_id', value: metadata.ticketId }, { display_name: 'Player', variable_name: 'player', value: metadata.playerName }, { display_name: 'Tournament', variable_name: 'tournament', value: metadata.tournament }] }
+    })
+  });
+  const data = await res.json();
+  if (!data.status) throw new Error(data.message || 'Paystack initialization failed');
+  return data.data; // { authorization_url, access_code, reference }
+}
+
+async function paystackVerify(reference) {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) throw new Error('PAYSTACK_SECRET_KEY not configured');
+  const res = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+    headers: { 'Authorization': `Bearer ${secret}` }
+  });
+  const data = await res.json();
+  if (!data.status) throw new Error(data.message || 'Verification failed');
+  return data.data; // { status, reference, amount, customer, ... }
+}
+
+function verifyPaystackWebhook(rawBody, signature) {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret || !signature) return false;
+  const hash = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+  return hash === signature;
+}
+
+async function confirmRegistrationPayment(ticketId, paystackRef, data) {
+  const reg = data.registrations.find(r => r.ticketId === ticketId.toUpperCase());
+  if (!reg || reg.paymentStatus === 'confirmed') return reg;
+  reg.paymentStatus = 'confirmed';
+  reg.paymentReference = paystackRef;
+  reg.paystackReference = paystackRef;
+  reg.paystackVerified = true;
+  reg.approvedAt = new Date().toISOString();
+  saveData(data);
+  const tournament = data.tournaments.find(t => t.id === reg.tournamentId);
+  if (tournament && reg.email) emailPaymentConfirmed(reg, tournament).catch(console.error);
+  console.log(`[PAYSTACK] Payment verified and ticket confirmed: ${ticketId}`);
+  return reg;
 }
 
 // ============================================================
@@ -518,19 +595,21 @@ app.post('/api/register', registrationLimiter, async (req, res) => {
 
     const paymentProvider = process.env.PAYMENT_PROVIDER || 'manual';
 
+    const paystackEnabled = !!(process.env.PAYSTACK_SECRET_KEY);
+
     res.json({
       success: true,
       message: isFree
         ? 'Registration successful! You are confirmed for this free event.'
-        : 'Registration successful! Follow the payment instructions to secure your spot.',
+        : 'Registration successful! Complete payment to secure your spot.',
       ticketId,
       isFree,
-      paymentProvider: isFree ? 'free' : paymentProvider,
+      paystackEnabled: isFree ? false : paystackEnabled,
       paymentInfo: isFree ? null : {
         amount: tournament.entryFee,
         bankName: process.env.BANK_NAME || 'Access Bank',
         accountName: process.env.ACCOUNT_NAME || 'East Arena Gaming',
-        accountNumber: process.env.ACCOUNT_NUMBER || '0123456789',
+        accountNumber: process.env.ACCOUNT_NUMBER || 'Contact admin for account details',
         reference: ticketId
       }
     });
@@ -885,6 +964,93 @@ app.get('/api/admin/email-status', requireAdmin, (req, res) => {
     configured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
     from: EMAIL_FROM
   });
+});
+
+// ============================================================
+// PAYSTACK PAYMENT ROUTES
+// ============================================================
+
+// Initialize Paystack payment — secret key stays on server, never sent to frontend
+app.post('/api/payment/initialize', registrationLimiter, async (req, res) => {
+  const { ticketId } = req.body;
+  if (!ticketId) return res.status(400).json({ error: 'Ticket ID required' });
+
+  if (!process.env.PAYSTACK_SECRET_KEY) {
+    return res.status(400).json({ error: 'Online payment is not configured. Please use bank transfer.' });
+  }
+
+  const data = loadData();
+  const reg = data.registrations.find(r => r.ticketId === ticketId.toUpperCase());
+  if (!reg) return res.status(404).json({ error: 'Ticket not found' });
+  if (reg.paymentStatus === 'confirmed') return res.status(400).json({ error: 'Payment is already confirmed.' });
+  if (reg.paymentStatus === 'rejected') return res.status(400).json({ error: 'This registration was rejected. Please re-register.' });
+
+  const tournament = data.tournaments.find(t => t.id === reg.tournamentId);
+  if (!tournament) return res.status(404).json({ error: 'Tournament not found' });
+  if (tournament.entryFee === 0) return res.status(400).json({ error: 'This is a free event.' });
+
+  try {
+    const callbackUrl = `${getAppUrl()}/payment/callback`;
+    const ps = await paystackInitialize({
+      email: reg.email,
+      amountNaira: tournament.entryFee,
+      reference: reg.ticketId, // ticketId is our Paystack reference
+      callbackUrl,
+      metadata: { ticketId: reg.ticketId, playerName: reg.playerName, tournament: tournament.name }
+    });
+    res.json({ success: true, authorization_url: ps.authorization_url, reference: ps.reference });
+  } catch (err) {
+    console.error('[PAYSTACK INIT ERROR]', err.message);
+    res.status(500).json({ error: 'Could not initialize payment. Please try bank transfer or contact support.' });
+  }
+});
+
+// Paystack callback — user is redirected here after paying on Paystack's page
+app.get('/payment/callback', async (req, res) => {
+  const reference = req.query.reference || req.query.trxref;
+  if (!reference) return res.redirect('/?payment=missing_reference');
+
+  try {
+    const transaction = await paystackVerify(reference);
+
+    if (transaction.status !== 'success') {
+      // Payment was cancelled or failed — send back to ticket page in pending state
+      const data = loadData();
+      const reg = data.registrations.find(r => r.ticketId === reference.toUpperCase());
+      const dest = reg ? `/ticket/${reg.ticketId}?payment=cancelled` : '/?payment=failed';
+      return res.redirect(dest);
+    }
+
+    const data = loadData();
+    const reg = await confirmRegistrationPayment(reference, transaction.reference, data);
+    if (!reg) return res.redirect('/?error=ticket_not_found');
+
+    res.redirect(`/ticket/${reg.ticketId}?payment=success`);
+  } catch (err) {
+    console.error('[PAYSTACK CALLBACK ERROR]', err.message);
+    res.redirect('/?error=payment_verification_failed');
+  }
+});
+
+// Paystack webhook — fires independently of browser redirect, ensures reliability
+// Paystack retries this for up to 24h if it fails. Always respond 200 quickly.
+app.post('/api/webhooks/paystack', async (req, res) => {
+  res.sendStatus(200); // acknowledge immediately
+  const signature = req.headers['x-paystack-signature'];
+  if (!verifyPaystackWebhook(req.body, signature)) {
+    console.warn('[PAYSTACK WEBHOOK] Invalid signature — ignoring');
+    return;
+  }
+  try {
+    const event = JSON.parse(req.body.toString());
+    if (event.event === 'charge.success' && event.data?.status === 'success') {
+      const reference = event.data.reference;
+      const data = loadData();
+      await confirmRegistrationPayment(reference, reference, data);
+    }
+  } catch (err) {
+    console.error('[PAYSTACK WEBHOOK ERROR]', err.message);
+  }
 });
 
 // ============================================================

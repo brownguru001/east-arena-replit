@@ -534,90 +534,157 @@ function SuccessPage({ result, setPage }) {
 
 // ─── Payment Page ─────────────────────────────────────────────────────
 function PaymentPage({ result, setPage }) {
-  const [ref, setRef] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [psLoading, setPsLoading]   = useState(false);
+  const [psError, setPsError]       = useState('');
+  const [manualOpen, setManualOpen] = useState(false);
+  const [ref, setRef]               = useState('');
+  const [refSubmitted, setRefSubmitted] = useState(false);
+  const [refLoading, setRefLoading] = useState(false);
+  const [refError, setRefError]     = useState('');
 
   if (!result) { setPage('home'); return null; }
 
+  const pi = result.paymentInfo || {};
+
+  // ── Paystack redirect ──────────────────────────────────────
+  const payWithPaystack = async () => {
+    setPsError('');
+    setPsLoading(true);
+    try {
+      const res = await fetch('/api/payment/initialize', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: result.ticketId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorization_url) {
+        setPsError(data.error || 'Could not start payment. Please use bank transfer below.');
+        setPsLoading(false);
+        setManualOpen(true);
+        return;
+      }
+      // Secret key never touched frontend — we just redirect to Paystack's hosted page
+      window.location.href = data.authorization_url;
+    } catch {
+      setPsError('Network error. Please try bank transfer below.');
+      setPsLoading(false);
+      setManualOpen(true);
+    }
+  };
+
+  // ── Manual reference submit ────────────────────────────────
   const submitRef = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setRefError('');
+    setRefLoading(true);
     try {
       const res = await fetch('/api/submit-payment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticketId: result.ticketId, paymentReference: ref })
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Submission failed'); setLoading(false); return; }
-      setSubmitted(true);
-    } catch { setError('Network error. Please try again.'); }
-    setLoading(false);
+      if (!res.ok) { setRefError(data.error || 'Submission failed'); setRefLoading(false); return; }
+      setRefSubmitted(true);
+    } catch { setRefError('Network error. Please try again.'); }
+    setRefLoading(false);
   };
 
-  if (submitted) {
-    return h('div', { className: 'max-w-md mx-auto text-center fade-in-up' },
-      h('div', { className: 'text-6xl mb-4 float-anim' }, '📬'),
-      h('h2', { className: 'text-2xl font-black text-green-400 mb-2' }, 'Reference Submitted!'),
-      h('p', { className: 'text-slate-400 mb-6 text-sm' }, 'Your payment reference has been sent. Admin will review and confirm within 30 minutes during business hours.'),
-      h('div', { className: 'bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-6 text-left space-y-2.5 text-sm' },
-        h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Ticket ID'), h('span', { className: 'font-mono font-black text-amber-400 text-lg' }, result.ticketId)),
-        h('div', { className: 'flex justify-between' }, h('span', { className: 'text-slate-400' }, 'Status'), h(Badge, { status: 'pending' }))
-      ),
-      h('a', { href: '/ticket/' + result.ticketId, className: 'block w-full btn-primary py-3.5 rounded-xl font-black text-base mb-3' }, 'View My Ticket →'),
-      h('button', { onClick: () => setPage('home'), className: 'text-slate-500 hover:text-white text-sm transition' }, '← Back to Home')
-    );
-  }
+  return h('div', { className: 'max-w-md mx-auto space-y-4' },
 
-  const pi = result.paymentInfo;
-  return h('div', { className: 'max-w-md mx-auto' },
-    h('div', { className: 'bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-5 fade-in-up' },
+    // ── Registration confirmed banner ──────────────────────
+    h('div', { className: 'bg-green-500/10 border border-green-500/20 rounded-2xl p-4 fade-in-up' },
       h('div', { className: 'text-green-400 font-black text-lg mb-1' }, '✓ Registration Successful!'),
       h('div', { className: 'flex justify-between text-sm' },
-        h('span', { className: 'text-slate-400' }, 'Your Ticket ID'),
+        h('span', { className: 'text-slate-400' }, 'Ticket ID'),
         h('span', { className: 'font-mono font-black text-amber-400 text-lg' }, result.ticketId)
       ),
-      h('p', { className: 'text-xs text-slate-500 mt-1' }, 'A confirmation email has been sent to your email address.')
+      h('p', { className: 'text-xs text-slate-500 mt-1' }, 'A confirmation email was sent. Complete payment to lock your spot.')
     ),
 
-    h('div', { className: 'bg-slate-900/80 border border-amber-500/20 rounded-2xl p-5 mb-5' },
-      h('h3', { className: 'font-black text-amber-400 mb-4 text-lg' }, '💳 PAYMENT INSTRUCTIONS'),
-      h('p', { className: 'text-slate-400 text-sm mb-4' }, 'Send the exact entry fee to the account below. Use your Ticket ID as the payment narration.'),
-      h('div', { className: 'rounded-xl overflow-hidden border border-slate-800 mb-4' },
-        ...[
-          ['Amount',         '₦' + fmt(pi.amount), true],
-          ['Bank',           pi.bankName, false],
-          ['Account Name',   pi.accountName, false],
-          ['Account Number', pi.accountNumber, true],
-          ['Narration',      result.ticketId, true],
-        ].map(([label, value, highlight]) =>
-          h('div', { className: 'flex justify-between items-center px-4 py-3 bg-slate-800/40 border-b border-slate-800 last:border-0' },
-            h('span', { className: 'text-slate-400 text-sm' }, label),
-            h('span', { className: `font-bold text-sm ${highlight ? 'text-amber-400 font-mono' : 'text-white'}` }, value)
-          )
-        )
+    // ── Paystack button (primary path) ─────────────────────
+    result.paystackEnabled && h('div', { className: 'bg-slate-900/80 border border-amber-500/20 rounded-2xl p-5' },
+      h('div', { className: 'flex justify-between items-center mb-4' },
+        h('div', null,
+          h('div', { className: 'font-black text-white text-base' }, '💳 Pay Entry Fee'),
+          h('div', { className: 'text-slate-500 text-xs mt-0.5' }, 'Secure payment via Paystack')
+        ),
+        h('div', { className: 'text-amber-400 font-black text-xl' }, '₦' + fmt(pi.amount))
       ),
-      h('div', { className: 'bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300' },
-        '⚠ Important: Use ', h('strong', null, result.ticketId), ' as your bank narration so we can match your payment.'
+      psError && h('div', { className: 'bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-3 text-sm mb-3' }, psError),
+      h('button', {
+        onClick: payWithPaystack, disabled: psLoading,
+        className: 'w-full py-4 rounded-xl font-black text-base transition disabled:opacity-60 flex items-center justify-center gap-3',
+        style: { background: 'linear-gradient(135deg,#00c3ff,#0090d4)', color: '#fff' }
+      },
+        psLoading
+          ? h('span', { className: 'flex items-center gap-2' },
+              h('div', { className: 'w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' }),
+              'Redirecting to Paystack...')
+          : h('span', { className: 'flex items-center gap-2' },
+              h('span', null, '🔒'),
+              'Pay ₦' + fmt(pi.amount) + ' Securely with Paystack',
+              h('span', { className: 'text-xs opacity-70 font-normal' }, '→'))
+      ),
+      h('p', { className: 'text-slate-600 text-xs text-center mt-2' }, 'You will be redirected to Paystack\'s secure checkout. Return here after payment.')
+    ),
+
+    // ── Manual transfer (always available, toggle if Paystack enabled) ─
+    h('div', { className: 'bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden' },
+      result.paystackEnabled
+        ? h('button', {
+            onClick: () => setManualOpen(!manualOpen),
+            className: 'w-full px-5 py-3.5 flex justify-between items-center text-sm font-semibold text-slate-400 hover:text-white transition'
+          },
+            h('span', null, '🏦 Prefer bank transfer instead?'),
+            h('span', { className: 'text-xs' }, manualOpen ? '▲ Hide' : '▼ Show'))
+        : h('div', { className: 'px-5 py-4' },
+            h('h3', { className: 'font-black text-amber-400 text-base mb-1' }, '💳 PAYMENT INSTRUCTIONS'),
+            h('p', { className: 'text-slate-400 text-xs' }, 'Transfer the entry fee to the account below.')
+          ),
+
+      (manualOpen || !result.paystackEnabled) && h('div', { className: 'px-5 pb-5 border-t border-slate-800' },
+        h('div', { className: 'rounded-xl overflow-hidden border border-slate-800 my-4' },
+          ...[
+            ['Amount',         '₦' + fmt(pi.amount),       true],
+            ['Bank',           pi.bankName,                  false],
+            ['Account Name',   pi.accountName,               false],
+            ['Account Number', pi.accountNumber,             true],
+            ['Narration',      result.ticketId,              true],
+          ].map(([label, value, hl]) =>
+            h('div', { key: label, className: 'flex justify-between items-center px-4 py-3 bg-slate-800/40 border-b border-slate-800 last:border-0' },
+              h('span', { className: 'text-slate-400 text-sm' }, label),
+              h('span', { className: `font-bold text-sm ${hl ? 'text-amber-400 font-mono' : 'text-white'}` }, value)
+            )
+          )
+        ),
+        h('div', { className: 'bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 mb-4' },
+          '⚠ Use ', h('strong', null, result.ticketId), ' as your bank narration so we can match your payment.'
+        ),
+
+        refSubmitted
+          ? h('div', { className: 'bg-green-500/10 border border-green-500/30 text-green-300 rounded-xl p-3 text-sm text-center' },
+              '✓ Reference submitted! Admin will confirm within 30 minutes.')
+          : h('form', { onSubmit: submitRef, className: 'space-y-3' },
+              h('p', { className: 'text-slate-400 text-xs font-semibold uppercase tracking-wide' }, 'Submit your transaction reference:'),
+              refError && h('div', { className: 'text-red-300 text-xs bg-red-500/10 border border-red-500/20 rounded-lg p-2' }, refError),
+              h('div', { className: 'flex gap-2' },
+                h('input', {
+                  type: 'text', placeholder: 'Bank transaction reference', value: ref,
+                  onChange: e => setRef(e.target.value), required: true,
+                  className: 'flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-amber-400'
+                }),
+                h('button', {
+                  type: 'submit', disabled: refLoading || !ref.trim(),
+                  className: 'px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-sm transition disabled:opacity-50 whitespace-nowrap'
+                }, refLoading ? '...' : 'Submit')
+              )
+            )
       )
     ),
 
-    error && h('div', { className: 'bg-red-500/10 border border-red-500/40 text-red-300 rounded-xl p-3 mb-4 text-sm' }, error),
-
-    h('form', { onSubmit: submitRef, className: 'bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4' },
-      h('h3', { className: 'font-black text-white' }, 'Confirm Your Transfer'),
-      h('p', { className: 'text-slate-400 text-sm' }, 'After sending the transfer, paste your bank transaction reference here:'),
-      h(Input, { label: 'Bank Transaction Reference', type: 'text', placeholder: 'e.g. TRN2026071234567', required: true, value: ref, onChange: e => setRef(e.target.value), autoComplete: 'off' }),
-      h('button', { type: 'submit', disabled: loading || !ref.trim(), className: 'w-full py-3 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl transition disabled:opacity-50' },
-        loading ? 'Submitting...' : '✓ SUBMIT PAYMENT REFERENCE'
-      ),
-      h('p', { className: 'text-slate-600 text-xs text-center' }, 'Confirmed within 30 minutes during business hours.')
-    ),
-
-    h('div', { className: 'mt-5 text-center' },
-      h('a', { href: '/ticket/' + result.ticketId, className: 'text-amber-400 hover:text-amber-300 text-sm transition' }, 'View Ticket Page →')
+    // ── View ticket link ───────────────────────────────────
+    h('div', { className: 'text-center pb-4' },
+      h('a', { href: '/ticket/' + result.ticketId, className: 'text-amber-400 hover:text-amber-300 text-sm transition' },
+        'View My Ticket Page →')
     )
   );
 }

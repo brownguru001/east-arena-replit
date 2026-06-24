@@ -2,4 +2,4 @@
   - [East Arena credentials](east-arena-creds.md) — admin username/password stored in .replit userenv, NOT in code
   - [East Arena email setup](east-arena-email.md) — nodemailer with SMTP env vars; graceful skip if unconfigured
   - [East Arena QR codes](east-arena-qr.md) — generated on-demand in /api/ticket/:id, not stored in JSON
-  
+  - [Paystack integration](paystack-integration.md) — redirect flow, secret key server-only, webhook verified via HMAC-SHA512

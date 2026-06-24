@@ -121,8 +121,18 @@
         </div>
 
         <!-- Payment Info (for pending) -->
-        <div id="payment-info" class="hidden border-t border-slate-800 pt-4">
-          <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+        <div id="payment-info" class="hidden border-t border-slate-800 pt-4 space-y-3">
+          <!-- Paystack button (shown when Paystack is configured) -->
+          <div id="paystack-pay-section" class="hidden">
+            <button id="paystack-pay-btn" onclick="payWithPaystack()"
+              class="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 transition"
+              style="background:linear-gradient(135deg,#00c3ff,#0090d4);color:#fff">
+              🔒 Pay Entry Fee Securely with Paystack →
+            </button>
+            <p class="text-slate-600 text-xs text-center mt-1">You will be redirected to Paystack's secure checkout.</p>
+          </div>
+          <!-- Manual transfer fallback -->
+          <div id="manual-pay-section" class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
             <p class="text-yellow-400 font-bold text-sm mb-2">💳 Payment Required</p>
             <div id="payment-details" class="text-sm space-y-1.5"></div>
           </div>
@@ -232,12 +242,9 @@
           banner.textContent = '⏳ PENDING — Awaiting Payment Confirmation';
           banner.style.cssText = 'background:#78350f;color:#fcd34d;';
           card.style.border = '1px solid rgba(245,158,11,0.3)';
-          // Show payment info and submit section
           if (data.tournament && data.tournament.entryFee > 0) {
-            show('payment-info');
+            renderPaymentSection(data);
             show('submit-payment-section');
-            document.getElementById('payment-details').innerHTML =
-              `<div class="text-yellow-200">Transfer <strong>₦${Number(data.tournament.entryFee).toLocaleString()}</strong> using Ticket ID <strong class="font-mono">${data.ticketId}</strong> as narration</div>`;
           }
         }
 
@@ -250,7 +257,61 @@
       .catch(() => { hide('loading'); show('error'); });
   }
 
-  // Payment reference form
+  // ── Paystack pay button (on ticket page) ────────────────────────────
+  async function payWithPaystack() {
+    const btn = document.getElementById('paystack-pay-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Redirecting to Paystack...'; }
+    try {
+      const res = await fetch('/api/payment/initialize', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorization_url) {
+        if (btn) { btn.disabled = false; btn.textContent = '🔒 Pay Entry Fee Securely with Paystack →'; }
+        alert(data.error || 'Could not start payment. Please contact support.');
+        return;
+      }
+      window.location.href = data.authorization_url;
+    } catch {
+      if (btn) { btn.disabled = false; btn.textContent = '🔒 Pay Entry Fee Securely with Paystack →'; }
+      alert('Network error. Please try again.');
+    }
+  }
+
+  // Render Paystack button vs manual section based on server config
+  function renderPaymentSection(data) {
+    if (!data.tournament || data.tournament.entryFee === 0) return;
+    show('payment-info');
+
+    // Check if Paystack is enabled by trying the endpoint
+    fetch('/api/payment/initialize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketId: 'CHECK_ONLY' })
+    }).then(r => r.json()).then(d => {
+      // If error says "not configured" → Paystack disabled → show manual only
+      if (d.error && d.error.includes('not configured')) {
+        document.getElementById('manual-pay-section')?.classList.remove('hidden');
+      } else {
+        // Paystack is configured — show Paystack button; manual available via expand
+        document.getElementById('paystack-pay-section')?.classList.remove('hidden');
+        document.getElementById('manual-pay-section')?.classList.add('hidden');
+      }
+    }).catch(() => {
+      document.getElementById('manual-pay-section')?.classList.remove('hidden');
+    });
+
+    document.getElementById('payment-details').innerHTML =
+      `<div class="text-yellow-200 text-xs space-y-1">
+        <div>Bank: <strong>${esc(ticketData?.paymentDetails?.bankName || 'See admin')}</strong></div>
+        <div>Amount: <strong>₦${Number(data.tournament.entryFee).toLocaleString()}</strong></div>
+        <div>Use Ticket ID <strong class="font-mono text-amber-300">${ticketId}</strong> as narration</div>
+      </div>`;
+  }
+
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ── Payment reference form (manual fallback) ─────────────────────────
   document.getElementById('payment-ref-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const ref = document.getElementById('ref-input').value.trim();
