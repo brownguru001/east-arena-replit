@@ -1,0 +1,48 @@
+{
+  "tournaments": [
+    {
+      "id": 1,
+      "name": "East Arena Championship S1",
+      "date": "2024-07-20",
+      "entryFee": 30000,
+      "prizePool": {
+        "first": 150000,
+        "second": 80000,
+        "third": 40000
+      },
+      "status": "upcoming",
+      "twitchLink": "https://twitch.tv/eastarena",
+      "maxPlayers": 16,
+      "registrations": [
+        "6d93a3ca-60f9-448c-9122-9e630b9fc8b9",
+        "65a65f97-5129-40ae-a8a7-aed9de0ccae5"
+      ]
+    }
+  ],
+  "registrations": [
+    {
+      "id": "6d93a3ca-60f9-448c-9122-9e630b9fc8b9",
+      "ticketId": "EAD4A0AE",
+      "playerName": "Onuachu Bruno Odinakachukwu",
+      "gamertag": "Bruno",
+      "phone": "08169328925",
+      "location": "Lekki",
+      "tournamentId": 1,
+      "paymentStatus": "confirmed",
+      "registeredAt": "2026-06-23T23:54:06.993Z",
+      "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATdSURBVO3BSY4kSRIEQRZD/P/LPHXUuRjgcI3sWoQo/kLVkkPVokPVokPVokPVokPVokPVokPVokPVokPVokPVokPVokPVokPVokPVokPVog8vJeEnqdwkYZPKlIRJ5Ykk3KhMSfhJKm8cqhYdqhYdqhZ9WKayKQlPqExJmFRukjAlYZPKlIQnVDYlYdOhatGhatGhatGHL0vCEypPJGFSmVSmJDyhMiVhSsKkMiXhm5LwhMo3HaoWHaoWHaoWffjLJOFGZUrCpDIlYVKZkjAlYVKZkjCp/E0OVYsOVYsOVYs+/ONUblSmJEwqUxKmJPxLDlWLDlWLDlWLPnyZyk9SuUnCpPJGEiaVKQmTyiaV38mhatGhatGhatGHZUn4nSRhUpmSMKlMSZhUpiS8kYRJ5SYJv7ND1aJD1aJD1aL4C3+wJNyovJGEJ1T+ZYeqRYeqRYeqRfEXXkjCpDIlYZPKE0mYVKYkTCo3SZhUpiRMKjdJmFSmJGxS+aZD1aJD1aJD1aIPL6lsUrlJwqRyozIlYVKZkvCGypSEG5UpCW+oPJGESeWNQ9WiQ9WiQ9WiDy8l4UZlSsKkMiXhiSRMKv+lJNyovKEyJeENlU2HqkWHqkWHqkUflqlsUrlJwhMqUxJuVKYk3KhsUpmSMKk8kYRJZdOhatGhatGhatGHH6byRBImlZskTCpPqExJmFSmJNyo3CRhUrlRuUnCjco3HaoWHaoWHaoWfXhJZUrCpDIlYVK5UZmSMKncJGFSeULljSTcqExJeENlSsJNEiaVNw5Viw5Viw5Viz78MJUblSkJk8qUhEnlCZU3VKYk3KjcqExJ+CaVTYeqRYeqRYeqRR++LAmTypSEG5UpCZPKjcqUhBuVKQmTyo3KN6lMSbhRmZIwqWw6VC06VC06VC368FISJpU3VKYkTCo3SbhRmZJwozIlYVKZkjCp3CRhUplUblRukjCpfNOhatGhatGhatGHZUmYVKYkTCo3KlMSnlC5UZmScKMyJWFSmZJwo3KThG9KwqTyxqFq0aFq0aFq0YdlKjcqUxImlSkJk8qfROUmCTcqUxImlSkJT6hsOlQtOlQtOlQt+vDDkjCpTEmYVKYkTCpTEiaVKQlPqExJmFSeSMKkcpOESWVKwqRyk4RJZdOhatGhatGhalH8hReSMKm8kYRvUpmSMKlMSZhUpiTcqNwkYZPKlIQnVN44VC06VC06VC2Kv/AHS8IbKj8pCTcqTyRhk8obh6pFh6pFh6pFH15Kwk9SmVSmJEwqN0mYVG6ScKOyKQmTyhsq33SoWnSoWnSoWvRhmcqmJNwkYVKZknCjcpOEN5IwqUxJuFF5Q2VKwqSy6VC16FC16FC16MOXJeEJlU0qN0mYVCaVmyRMSXgjCW+oTEmYVKYkTCpvHKoWHaoWHaoWffjLJGFSeSIJT6jcJOEJlTeS8ITKpkPVokPVokPVog/1f1SeSMKksikJT6jcJGFS2XSoWnSoWnSoWvThy1S+SWVKwk0SJpUpCZPKpiQ8oTIlYVKZkjCp/KRD1aJD1aJD1aIPy5Lwk5IwqfwklRuVJ5IwqTyhMiVhUvmmQ9WiQ9WiQ9Wi+AtVSw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Viw5Vi/4HgaBiBO50/A8AAAAASUVORK5CYII="
+    },
+    {
+      "id": "65a65f97-5129-40ae-a8a7-aed9de0ccae5",
+      "ticketId": "D3F841F4",
+      "playerName": "Onuachu Bruno Odinakachukwu",
+      "gamertag": "Bruno",
+      "phone": "08169328925",
+      "location": "Lekki",
+      "tournamentId": 1,
+      "paymentStatus": "confirmed",
+      "registeredAt": "2026-06-23T23:58:43.312Z",
+      "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4jRxAEwfAC//9l1x7zVECjk6PRKszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6TmBsiNmhsgk5oJyKTmCSA3aiYgP0nNGydVi06qFp1ULfpkmZpNQJ5QMwG5AXIDZJOaCcgTajYB2XRSteikatFJ1aJPvgzIE2qeAHKjZgLyhJoJyBNAvgnIE2q+6aRq0UnVopOqRZ/85YBMaiYgk5oJyKTmBsikZgIyqfmbnFQtOqladFK16JO/jJpNaiYgk5obIP8nJ1WLTqoWnVQt+uTL1PybgNyo2aRmAjKp2aTmNzmpWnRSteikatEny4D8ZmomIJOaCcikZgIyqXkCyKTmBshvdlK16KRq0UnVok9eUvObAPlN1NyouVHzX3JSteikatFJ1aJPXgIyqZmAbFIzqZmATGomIE+oeQLIpOYGyKRmArJJzTedVC06qVp0UrXok2VAJjUTkBs1TwCZ1ExAngDyhJobIDdqJiBvqHkCyKTmjZOqRSdVi06qFn2yTM0EZFJzA+RGzQ2QSc0E5JuA3Kh5Q80E5A01m06qFp1ULTqpWvTJMiBPALlRc6PmBsgbaiYgN2o2qZmATGqeADKp2XRSteikatFJ1SL8Iz8IyE9ScwNkUjMBeUPNDZBJzRtAbtR800nVopOqRSdViz55Ccg3qZmATGomIDdAJjU3ap4AMgG5UTMBeUPNBOQGyKTmjZOqRSdVi06qFn2yTM0mIJOaCcgNkBsgk5ongDyh5kbNBOSb1Gw6qVp0UrXopGrRJy+p+SY1T6i5AfIEkCfUfJOaCciNmgnIpGbTSdWik6pFJ1WLPnkJyKRmAvKEmgnIjZoJyKTmDTUTkEnNBGRScwNkUjOpuVFzA2RS800nVYtOqhadVC36ZBmQTWomIDdqnlAzAXkCyKRmAnKj5gbINwGZ1LxxUrXopGrRSdWiT5apmYBMam6A3KiZgDyh5g01T6i5AXKjZgIyqZmAPKFm00nVopOqRSdViz75ZdTcALlRMwG5AXKjZhOQSc0NkEnNBGRScwNkUrPppGrRSdWik6pFn3yZmgnIpOYGyKRmAnKjZgJyo2YC8oaaSc0E5AkgTwC5ATKpeeOkatFJ1aKTqkX4R/7DgExqJiA3ap4AMql5AsiNmieAbFLzxknVopOqRSdViz55CchPUjOpuVFzA2RS85sAmdS8oeabTqoWnVQtOqla9MkyNZuA3AC5UTMBeQLIDZBJzQRkUjMBuVHzhpoJyKRm00nVopOqRSdViz75MiBPqHlDzRNqbtTcAJmAvAHkDTUTkEnNBGRS88ZJ1aKTqkUnVYs++csBmdQ8AeRGzQ2QJ9S8AeQJNZtOqhadVC06qVr0yV8GyA2QSc0E5EbNBGRSswnIE2pugExqNp1ULTqpWnRSteiTL1PzTWpugDyhZgKyCcgTaiYgk5oJyKTmJ51ULTqpWnRSteiTZUB+EpAn1ExA3lBzo+YJIJOaJ9RMQCY133RSteikatFJ1SL8I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AGXgJEKp4VV8AAAAAElFTkSuQmCC"
+    }
+  ]
+}
