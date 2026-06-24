@@ -1,0 +1,159 @@
+I have already launched my East Arena Gaming app MVP. I now want you to upgrade and stabilize it into a professional production-ready platform without destroying existing working features.
+
+First analyze the entire existing codebase and identify:
+
+* broken features
+* security problems
+* missing production requirements
+* bad user experience issues
+* database problems
+* deployment issues
+
+Do not rebuild unnecessarily. Improve what already exists.
+
+CORE GOAL:
+Turn this into a gaming tournament/event registration platform.
+
+MAIN EVENT:
+FIFA tournament should remain the premium paid competition.
+
+OTHER FREE ACTIVITIES:
+Add support structure for:
+
+* Call of Duty
+* Mortal Kombat
+* casual gaming sessions
+
+These should not interfere with the FIFA paid tournament system.
+
+REGISTRATION SYSTEM:
+Upgrade registration so users provide:
+
+* full name
+* username/gaming name
+* phone number
+* email address
+* selected game/event
+* payment status
+* ticket status
+
+EMAIL SYSTEM:
+Implement proper email verification and notifications.
+
+After registration:
+
+* user receives confirmation email
+* ticket details are sent to email
+* QR code ticket is generated
+* QR code is attached/displayed in email
+* user can access ticket anytime
+
+Create email templates for:
+
+* registration successful
+* payment confirmed
+* ticket issued
+* event reminder
+* cancellation/refund notice
+
+QR SYSTEM:
+Fix and improve QR code system.
+
+Requirements:
+
+* every ticket has a unique QR code
+* QR code links to the user’s ticket record
+* admin can scan QR code at entrance
+* scanning marks attendance/check-in
+* prevent duplicate check-ins
+
+ADMIN PANEL:
+Secure the admin area.
+
+Requirements:
+
+* admin routes must not be visible publicly
+* remove admin links from normal user interface
+* protect with authentication
+* separate admin dashboard
+* show:
+    * total registrations
+    * paid users
+    * unpaid users
+    * checked-in users
+    * upcoming matches
+    * revenue summary
+
+USER DASHBOARD:
+Create a clean user area where users can:
+
+* view their registration
+* view ticket
+* view QR code
+* see event information
+* receive updates
+
+DESIGN:
+Make the app feel like a gaming brand.
+
+Improve:
+
+* animations
+* loading screens
+* buttons
+* mobile responsiveness
+* gaming atmosphere
+* modern UI
+
+DOMAIN READY:
+Prepare the app for custom domain connection.
+
+Create proper:
+
+* title metadata
+* favicon support
+* SEO basics
+* professional error pages
+
+DATABASE:
+Review database structure.
+
+Make sure:
+
+* users cannot see other users’ data
+* payments are not fake
+* records persist correctly
+* no duplicate registrations
+
+PAYMENT:
+Prepare payment architecture properly.
+
+Do not fake successful payments.
+
+Create:
+
+* payment pending state
+* payment successful state
+* payment failed state
+* payment verification structure
+
+FUTURE READY:
+Prepare structure for:
+
+* multiple tournaments
+* seasons
+* leaderboards
+* player rankings
+* match scheduling
+* announcements
+
+Do not add unnecessary complicated features yet.
+
+IMPORTANT:
+Before changing anything:
+
+1. explain current problems found
+2. explain what files/components will be changed
+3. then implement fixes step by step
+
+The final result should feel like a real gaming tournament company platform, not a school project.
