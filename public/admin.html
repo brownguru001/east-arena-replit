@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>East Arena — Admin</title>
+  <title>East Arena — Admin Panel</title>
   <link rel="icon" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -14,31 +14,30 @@
 </head>
 <body class="min-h-screen">
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="login-screen" class="min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-sm">
     <div class="text-center mb-8">
       <div class="text-5xl mb-3">🏆</div>
-      <h1 class="text-3xl font-black text-amber-400">EAST ARENA</h1>
-      <p class="text-slate-400 mt-1">Admin Dashboard</p>
+      <h1 class="text-2xl font-black text-amber-400">EAST ARENA</h1>
+      <p class="text-slate-400 text-sm mt-1">Gaming Tournament · Admin Panel</p>
     </div>
     <form id="login-form" class="bg-slate-800 border border-amber-500/30 rounded-xl p-6 space-y-4">
       <div id="login-error" class="hidden bg-red-500/20 border border-red-500 text-red-300 rounded p-3 text-sm"></div>
       <div>
         <label class="block text-slate-400 text-xs uppercase mb-1">Username</label>
-        <input id="login-user" type="text" placeholder="admin" required
+        <input id="login-user" type="text" required autocomplete="username"
           class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
       </div>
       <div>
         <label class="block text-slate-400 text-xs uppercase mb-1">Password</label>
-        <input id="login-pass" type="password" placeholder="••••••••" required
+        <input id="login-pass" type="password" required autocomplete="current-password"
           class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
       </div>
       <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-lg transition">
         LOGIN
       </button>
     </form>
-    <p class="text-center text-slate-500 text-xs mt-4">Default: admin / eastarena2024</p>
   </div>
 </div>
 
@@ -46,56 +45,49 @@
 <div id="admin-app" class="hidden min-h-screen flex flex-col">
 
   <!-- Top Bar -->
-  <div class="bg-slate-900 border-b border-amber-500/20 px-6 py-3 flex justify-between items-center sticky top-0 z-50">
+  <div class="bg-slate-900 border-b border-amber-500/20 px-4 sm:px-6 py-3 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-3">
-      <span class="text-xl font-black text-amber-400">🏆 EAST ARENA</span>
-      <span class="text-slate-500 text-sm">Admin Panel</span>
+      <span class="font-black text-amber-400">🏆 EAST ARENA</span>
+      <span class="text-slate-500 text-sm hidden sm:inline">Admin Panel</span>
     </div>
-    <div class="flex items-center gap-4">
-      <a href="/" target="_blank" class="text-slate-400 hover:text-white text-sm">View Site →</a>
-      <button id="logout-btn" class="text-sm text-red-400 hover:text-red-300">Logout</button>
+    <div class="flex items-center gap-3">
+      <a href="/" target="_blank" class="text-slate-400 hover:text-white text-sm hidden sm:block">View Site →</a>
+      <button id="logout-btn" class="text-sm text-red-400 hover:text-red-300 border border-red-400/30 px-3 py-1 rounded transition">Logout</button>
     </div>
   </div>
 
   <!-- Tabs -->
-  <div class="bg-slate-900 border-b border-slate-800 px-6">
-    <div class="flex gap-0">
-      <button class="tab-btn tab-active px-5 py-3 text-sm font-semibold transition" data-tab="overview">Overview</button>
-      <button class="tab-btn px-5 py-3 text-sm font-semibold text-slate-400 hover:text-white transition" data-tab="registrations">Registrations</button>
-      <button class="tab-btn px-5 py-3 text-sm font-semibold text-slate-400 hover:text-white transition" data-tab="tournaments">Tournaments</button>
+  <div class="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 overflow-x-auto">
+    <div class="flex gap-0 min-w-max">
+      <button class="tab-btn tab-active px-4 py-3 text-sm font-semibold transition whitespace-nowrap" data-tab="overview">Overview</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition whitespace-nowrap" data-tab="registrations">Registrations</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition whitespace-nowrap" data-tab="tournaments">Tournaments</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition whitespace-nowrap" data-tab="settings">Settings</button>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div class="flex-1 p-6 max-w-7xl mx-auto w-full">
+  <!-- Content -->
+  <div class="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full">
 
-    <!-- OVERVIEW TAB -->
+    <!-- OVERVIEW -->
     <div id="tab-overview" class="tab-content">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
         <h2 class="text-xl font-black text-white">Dashboard Overview</h2>
-        <button id="export-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-semibold transition">
-          📥 Export Data
-        </button>
+        <button id="export-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-semibold transition">📥 Export Backup</button>
       </div>
-
-      <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <!-- Populated by JS -->
-      </div>
-
+      <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8"></div>
       <div class="bg-slate-800 rounded-xl p-5">
-        <h3 class="font-bold text-white mb-4">Pending Payments Requiring Action</h3>
-        <div id="pending-list" class="space-y-3">
-          <p class="text-slate-400 text-sm">Loading...</p>
-        </div>
+        <h3 class="font-bold text-white mb-4">⚡ Pending Payments — Action Required</h3>
+        <div id="pending-list"><p class="text-slate-400 text-sm">Loading...</p></div>
       </div>
     </div>
 
-    <!-- REGISTRATIONS TAB -->
+    <!-- REGISTRATIONS -->
     <div id="tab-registrations" class="tab-content hidden">
       <div class="flex flex-wrap gap-3 mb-5 items-center justify-between">
         <h2 class="text-xl font-black text-white">All Registrations</h2>
         <div class="flex gap-2 flex-wrap">
-          <input id="search-input" type="text" placeholder="Search name, tag, phone, ticket..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm focus:border-amber-400 focus:outline-none w-64" />
+          <input id="search-input" type="text" placeholder="Search name, tag, phone, ticket..." class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm focus:border-amber-400 focus:outline-none w-56" />
           <select id="status-filter" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm focus:border-amber-400 focus:outline-none">
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -105,41 +97,80 @@
           <button id="refresh-regs" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">🔄</button>
         </div>
       </div>
-
-      <div id="regs-table-wrap" class="overflow-x-auto rounded-xl border border-slate-700">
-        <table class="w-full text-sm">
+      <div class="overflow-x-auto rounded-xl border border-slate-700">
+        <table class="w-full text-sm min-w-max">
           <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
             <tr>
               <th class="text-left px-4 py-3">Player</th>
-              <th class="text-left px-4 py-3">Gamer Tag</th>
+              <th class="text-left px-4 py-3">Tag</th>
               <th class="text-left px-4 py-3">Tournament</th>
               <th class="text-left px-4 py-3">Ticket</th>
-              <th class="text-left px-4 py-3">Reference</th>
+              <th class="text-left px-4 py-3">Ref #</th>
               <th class="text-left px-4 py-3">Status</th>
-              <th class="text-left px-4 py-3">Check-in</th>
+              <th class="text-left px-4 py-3">In</th>
               <th class="text-left px-4 py-3">Date</th>
               <th class="text-left px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody id="regs-tbody" class="divide-y divide-slate-800">
+          <tbody id="regs-tbody" class="divide-y divide-slate-800 bg-slate-900/40">
             <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Loading...</td></tr>
           </tbody>
         </table>
       </div>
-      <div id="regs-count" class="text-slate-400 text-xs mt-2"></div>
+      <div id="regs-count" class="text-slate-500 text-xs mt-2"></div>
     </div>
 
-    <!-- TOURNAMENTS TAB -->
+    <!-- TOURNAMENTS -->
     <div id="tab-tournaments" class="tab-content hidden">
       <div class="flex justify-between items-center mb-5">
         <h2 class="text-xl font-black text-white">Tournament Management</h2>
-        <button id="add-tournament-btn" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-lg text-sm transition">
-          + Add Tournament
-        </button>
+        <button id="add-tournament-btn" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-lg text-sm transition">+ Add Tournament</button>
       </div>
+      <div id="tournament-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>
+    </div>
 
-      <div id="tournament-list" class="space-y-4">
-        <p class="text-slate-400">Loading...</p>
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="tab-content hidden">
+      <h2 class="text-xl font-black text-white mb-6">Settings</h2>
+
+      <div class="max-w-md">
+        <!-- Change Password -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 mb-6">
+          <h3 class="font-bold text-white mb-1">🔒 Change Admin Password</h3>
+          <p class="text-slate-400 text-sm mb-5">After changing your password you will be logged out and must log in again.</p>
+          <div id="pw-success" class="hidden bg-green-500/20 border border-green-500 text-green-300 rounded p-3 text-sm mb-4"></div>
+          <div id="pw-error" class="hidden bg-red-500/20 border border-red-500 text-red-300 rounded p-3 text-sm mb-4"></div>
+          <form id="change-pw-form" class="space-y-4">
+            <div>
+              <label class="block text-slate-400 text-xs uppercase mb-1">Current Password</label>
+              <input id="pw-current" type="password" required autocomplete="current-password"
+                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs uppercase mb-1">New Password</label>
+              <input id="pw-new" type="password" required autocomplete="new-password" minlength="6"
+                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs uppercase mb-1">Confirm New Password</label>
+              <input id="pw-confirm" type="password" required autocomplete="new-password"
+                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-amber-400 focus:outline-none" />
+            </div>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2.5 rounded-lg transition">Update Password</button>
+          </form>
+        </div>
+
+        <!-- Platform Info -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+          <h3 class="font-bold text-white mb-4">ℹ️ Platform Info</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-slate-400">Platform</span><span class="font-semibold">East Arena Gaming Tournament</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Payment Method</span><span class="font-semibold text-yellow-400">Manual Bank Transfer</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Paystack</span><span class="text-slate-500">Ready to integrate (future)</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Games Supported</span><span class="font-semibold">FIFA · More coming</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Current Season</span><span class="font-semibold text-amber-400">Season 1</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -147,57 +178,76 @@
 </div>
 
 <!-- TOURNAMENT MODAL -->
-<div id="tournament-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-  <div class="bg-slate-800 border border-amber-500/30 rounded-xl w-full max-w-lg p-6">
+<div id="tournament-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
+  <div class="bg-slate-800 border border-amber-500/30 rounded-xl w-full max-w-lg p-6 my-4">
     <h3 id="modal-title" class="text-xl font-black text-amber-400 mb-5">Add Tournament</h3>
     <form id="tournament-form" class="space-y-4">
       <input type="hidden" id="t-edit-id" value="" />
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-2">
           <label class="block text-slate-400 text-xs uppercase mb-1">Tournament Name</label>
-          <input id="t-name" type="text" placeholder="East Arena Championship S2" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <input id="t-name" type="text" required placeholder="East Arena Championship S2"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Date</label>
-          <input id="t-date" type="date" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Max Players</label>
-          <input id="t-maxplayers" type="number" min="2" value="16" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-slate-400 text-xs uppercase mb-1">Entry Fee (₦)</label>
-          <input id="t-fee" type="number" min="0" placeholder="30000" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <label class="block text-slate-400 text-xs uppercase mb-1">Game</label>
+          <select id="t-game" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+            <option value="FIFA">⚽ FIFA</option>
+            <option value="CODM">🔫 Call of Duty Mobile</option>
+            <option value="Free Fire">🔥 Free Fire</option>
+            <option value="PUBG">🎯 PUBG Mobile</option>
+            <option value="eFootball">⚽ eFootball</option>
+            <option value="Other">🎮 Other</option>
+          </select>
         </div>
         <div>
           <label class="block text-slate-400 text-xs uppercase mb-1">Status</label>
           <select id="t-status" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
-            <option value="active">Active</option>
+            <option value="active">Active (Open)</option>
             <option value="upcoming">Upcoming</option>
             <option value="closed">Closed</option>
             <option value="inactive">Inactive</option>
           </select>
         </div>
         <div>
+          <label class="block text-slate-400 text-xs uppercase mb-1">Date</label>
+          <input id="t-date" type="date" required
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-slate-400 text-xs uppercase mb-1">Max Players</label>
+          <input id="t-maxplayers" type="number" min="2" value="16" required
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-slate-400 text-xs uppercase mb-1">Entry Fee (₦)</label>
+          <input id="t-fee" type="number" min="0" placeholder="30000" required
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+        <div>
           <label class="block text-slate-400 text-xs uppercase mb-1">1st Prize (₦)</label>
-          <input id="t-p1" type="number" min="0" placeholder="150000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <input id="t-p1" type="number" min="0" placeholder="150000"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
         </div>
         <div>
           <label class="block text-slate-400 text-xs uppercase mb-1">2nd Prize (₦)</label>
-          <input id="t-p2" type="number" min="0" placeholder="80000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <input id="t-p2" type="number" min="0" placeholder="80000"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
         </div>
         <div>
           <label class="block text-slate-400 text-xs uppercase mb-1">3rd Prize (₦)</label>
-          <input id="t-p3" type="number" min="0" placeholder="40000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+          <input id="t-p3" type="number" min="0" placeholder="40000"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
         </div>
-        <div class="col-span-2">
-          <label class="block text-slate-400 text-xs uppercase mb-1">Twitch / Stream Link</label>
-          <input id="t-twitch" type="text" placeholder="https://twitch.tv/eastarena" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
+        <div>
+          <label class="block text-slate-400 text-xs uppercase mb-1">Stream Link</label>
+          <input id="t-twitch" type="text" placeholder="https://twitch.tv/..."
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
         </div>
       </div>
       <div id="modal-error" class="hidden text-red-300 bg-red-500/20 border border-red-500 rounded p-2 text-sm"></div>
       <div class="flex gap-3 pt-2">
-        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2 rounded-lg transition">Save</button>
+        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2 rounded-lg transition">Save Tournament</button>
         <button type="button" id="modal-cancel" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg transition">Cancel</button>
       </div>
     </form>
@@ -205,15 +255,10 @@
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────
 let token = localStorage.getItem('ea_admin_token') || '';
 
-// ── API helper ─────────────────────────────────────────────────────────
 async function api(method, path, body) {
-  const opts = {
-    method,
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
-  };
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(path, opts);
   const data = await res.json();
@@ -221,7 +266,6 @@ async function api(method, path, body) {
   return { ok: res.ok, data };
 }
 
-// ── Auth ───────────────────────────────────────────────────────────────
 async function checkAuth() {
   if (!token) return showLogin();
   const { ok } = await api('GET', '/api/admin/check');
@@ -229,8 +273,7 @@ async function checkAuth() {
 }
 
 function showLogin() {
-  token = '';
-  localStorage.removeItem('ea_admin_token');
+  token = ''; localStorage.removeItem('ea_admin_token');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('admin-app').classList.add('hidden');
 }
@@ -238,15 +281,10 @@ function showLogin() {
 function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('admin-app').classList.remove('hidden');
-  loadOverview();
-  loadRegistrations();
-  loadTournaments();
+  loadOverview(); loadRegistrations(); loadTournaments();
 }
 
-function logout() {
-  api('POST', '/api/admin/logout');
-  showLogin();
-}
+function logout() { api('POST', '/api/admin/logout'); showLogin(); }
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -255,289 +293,271 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const username = document.getElementById('login-user').value;
   const password = document.getElementById('login-pass').value;
   const res = await fetch('/api/admin/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   });
   const data = await res.json();
   if (res.ok && data.token) {
-    token = data.token;
-    localStorage.setItem('ea_admin_token', token);
-    showApp();
+    token = data.token; localStorage.setItem('ea_admin_token', token); showApp();
   } else {
-    errEl.textContent = data.error || 'Login failed';
-    errEl.classList.remove('hidden');
+    errEl.textContent = data.error || 'Login failed'; errEl.classList.remove('hidden');
   }
 });
 
 document.getElementById('logout-btn').addEventListener('click', logout);
 
-// ── Tabs ───────────────────────────────────────────────────────────────
+// Tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => {
-      b.classList.remove('tab-active', 'text-amber-400');
-      b.classList.add('text-slate-400');
+      b.classList.remove('tab-active'); b.classList.add('text-slate-400'); b.classList.remove('text-amber-400');
     });
-    btn.classList.add('tab-active', 'text-amber-400');
-    btn.classList.remove('text-slate-400');
+    btn.classList.add('tab-active', 'text-amber-400'); btn.classList.remove('text-slate-400');
     const tab = btn.dataset.tab;
     document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
     if (tab === 'registrations') loadRegistrations();
-    if (tab === 'tournaments') loadTournaments();
-    if (tab === 'overview') loadOverview();
+    if (tab === 'tournaments')   loadTournaments();
+    if (tab === 'overview')      loadOverview();
   });
 });
 
-// ── Overview ───────────────────────────────────────────────────────────
+// ── Overview ─────────────────────────────────────────────────────────
 async function loadOverview() {
   const { data: stats } = await api('GET', '/api/admin/stats');
   if (!stats) return;
-
   const cards = [
-    { label: 'Total', value: stats.total, color: 'text-white', bg: 'bg-slate-700' },
-    { label: 'Confirmed', value: stats.confirmed, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { label: 'Pending', value: stats.pending, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-    { label: 'Rejected', value: stats.rejected, color: 'text-red-400', bg: 'bg-red-500/10' },
-    { label: 'Checked In', value: stats.checkedIn, color: 'text-teal-400', bg: 'bg-teal-500/10' },
-    { label: 'Revenue', value: '₦' + Number(stats.revenue).toLocaleString(), color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { label:'Total',      value: stats.total,     color:'text-white',     bg:'bg-slate-700' },
+    { label:'Confirmed',  value: stats.confirmed,  color:'text-green-400', bg:'bg-green-500/10' },
+    { label:'Pending',    value: stats.pending,    color:'text-yellow-400',bg:'bg-yellow-500/10' },
+    { label:'Rejected',   value: stats.rejected,   color:'text-red-400',   bg:'bg-red-500/10' },
+    { label:'Checked In', value: stats.checkedIn,  color:'text-teal-400',  bg:'bg-teal-500/10' },
+    { label:'Revenue',    value:'₦' + Number(stats.revenue).toLocaleString(), color:'text-amber-400', bg:'bg-amber-500/10' },
   ];
-
   document.getElementById('stats-grid').innerHTML = cards.map(c => `
     <div class="rounded-xl border border-slate-700 ${c.bg} p-4 text-center">
       <div class="text-2xl font-black ${c.color}">${c.value}</div>
       <div class="text-slate-400 text-xs uppercase mt-1">${c.label}</div>
-    </div>
-  `).join('');
+    </div>`).join('');
 
   const { data: regs } = await api('GET', '/api/admin/registrations?status=pending');
   const pending = Array.isArray(regs) ? regs.filter(r => r.paymentReference) : [];
-  const pendingList = document.getElementById('pending-list');
-
-  if (pending.length === 0) {
-    pendingList.innerHTML = '<p class="text-slate-400 text-sm">No pending payments with references submitted.</p>';
-    return;
-  }
-
-  pendingList.innerHTML = pending.slice(0, 10).map(r => `
+  const el = document.getElementById('pending-list');
+  if (pending.length === 0) { el.innerHTML = '<p class="text-slate-400 text-sm">No pending payments awaiting review.</p>'; return; }
+  el.innerHTML = pending.slice(0, 10).map(r => `
     <div class="flex items-center justify-between bg-slate-700/50 rounded-lg p-3 flex-wrap gap-2">
       <div>
-        <div class="font-bold text-white">${esc(r.playerName)} <span class="text-amber-400">@${esc(r.gamertag)}</span></div>
-        <div class="text-xs text-slate-400">${esc(r.tournamentName)} · Ref: <span class="font-mono text-yellow-300">${esc(r.paymentReference || '—')}</span></div>
-        <div class="text-xs text-slate-500">Ticket: ${esc(r.ticketId)} · ${new Date(r.registeredAt).toLocaleDateString()}</div>
+        <div class="font-bold text-white">${esc(r.playerName)} <span class="text-amber-400 font-mono text-sm">@${esc(r.gamertag)}</span></div>
+        <div class="text-xs text-slate-400 mt-0.5">${esc(r.tournamentName)} · Ref: <span class="font-mono text-yellow-300">${esc(r.paymentReference)}</span></div>
+        <div class="text-xs text-slate-500">Ticket: ${r.ticketId} · ${new Date(r.registeredAt).toLocaleDateString()}</div>
       </div>
       <div class="flex gap-2">
         <button onclick="approvePayment('${r.ticketId}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition">✓ Approve</button>
         <button onclick="rejectPayment('${r.ticketId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded transition">✗ Reject</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-document.getElementById('export-btn').addEventListener('click', () => {
-  window.open('/api/admin/export?token=' + token, '_blank');
-  fetch('/api/admin/export', { headers: { Authorization: 'Bearer ' + token } })
-    .then(r => r.blob())
-    .then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'east-arena-backup.json';
-      a.click();
-    });
+document.getElementById('export-btn').addEventListener('click', async () => {
+  const res = await fetch('/api/admin/export', { headers: { Authorization: 'Bearer ' + token } });
+  if (!res.ok) return;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'east-arena-backup.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded ✓', 'green');
 });
 
-// ── Registrations ──────────────────────────────────────────────────────
+// ── Registrations ────────────────────────────────────────────────────
 async function loadRegistrations() {
   const search = document.getElementById('search-input').value;
   const status = document.getElementById('status-filter').value;
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (status) params.set('status', status);
-  const { data: regs } = await api('GET', '/api/admin/registrations?' + params.toString());
+  const { data: regs } = await api('GET', '/api/admin/registrations?' + params);
   renderRegsTable(Array.isArray(regs) ? regs : []);
 }
 
 function renderRegsTable(regs) {
   document.getElementById('regs-count').textContent = regs.length + ' registration(s)';
-  if (regs.length === 0) {
+  if (!regs.length) {
     document.getElementById('regs-tbody').innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">No registrations found.</td></tr>';
     return;
   }
-
-  const statusBadge = (s) => {
-    const cfg = { confirmed: 'bg-green-600', pending: 'bg-yellow-500 text-slate-900', rejected: 'bg-red-600' };
-    return `<span class="px-2 py-0.5 rounded text-xs font-bold ${cfg[s] || 'bg-slate-600'}">${s}</span>`;
+  const badge = s => {
+    const c = { confirmed:'bg-green-600', pending:'bg-yellow-500 text-slate-900', rejected:'bg-red-600' };
+    return `<span class="px-2 py-0.5 rounded text-xs font-bold ${c[s]||'bg-slate-600'}">${s}</span>`;
   };
-
   document.getElementById('regs-tbody').innerHTML = regs.map(r => `
-    <tr class="hover:bg-slate-800/50 transition">
-      <td class="px-4 py-3 font-semibold">${esc(r.playerName)}<div class="text-xs text-slate-400">${esc(r.phone)}</div></td>
-      <td class="px-4 py-3 text-amber-400 font-mono">${esc(r.gamertag)}</td>
+    <tr class="hover:bg-slate-800/40 transition">
+      <td class="px-4 py-3"><div class="font-semibold">${esc(r.playerName)}</div><div class="text-xs text-slate-400">${esc(r.phone)}</div></td>
+      <td class="px-4 py-3 text-amber-400 font-mono text-sm">${esc(r.gamertag)}</td>
       <td class="px-4 py-3 text-slate-300 text-xs">${esc(r.tournamentName)}</td>
       <td class="px-4 py-3"><a href="/ticket/${r.ticketId}" target="_blank" class="font-mono text-amber-400 hover:underline text-xs">${r.ticketId}</a></td>
-      <td class="px-4 py-3 font-mono text-xs text-yellow-300">${esc(r.paymentReference || '—')}</td>
-      <td class="px-4 py-3">${statusBadge(r.paymentStatus)}</td>
-      <td class="px-4 py-3 text-center">${r.checkedIn ? '<span class="text-green-400 text-xs font-bold">✓ IN</span>' : '<span class="text-slate-500 text-xs">—</span>'}</td>
-      <td class="px-4 py-3 text-slate-400 text-xs">${new Date(r.registeredAt).toLocaleDateString()}</td>
+      <td class="px-4 py-3 font-mono text-xs text-yellow-300 max-w-[120px] truncate" title="${esc(r.paymentReference||'')}">${esc(r.paymentReference||'—')}</td>
+      <td class="px-4 py-3">${badge(r.paymentStatus)}</td>
+      <td class="px-4 py-3 text-center">${r.checkedIn ? '<span class="text-green-400 text-xs font-bold">✓</span>' : '<span class="text-slate-600">—</span>'}</td>
+      <td class="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">${new Date(r.registeredAt).toLocaleDateString()}</td>
       <td class="px-4 py-3">
         <div class="flex gap-1 flex-wrap">
-          ${r.paymentStatus === 'pending' && r.paymentReference ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition">✓</button>` : ''}
-          ${r.paymentStatus === 'pending' ? `<button onclick="rejectPayment('${r.ticketId}')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded transition">✗</button>` : ''}
-          ${r.paymentStatus === 'confirmed' && !r.checkedIn ? `<button onclick="checkinPlayer('${r.ticketId}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded transition">Check In</button>` : ''}
-          <button onclick="deletePlayer('${r.id}', '${esc(r.playerName)}')" class="px-2 py-1 bg-slate-700 hover:bg-red-700 text-white text-xs rounded transition">🗑</button>
+          ${r.paymentStatus==='pending' && r.paymentReference ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded">✓</button>` : ''}
+          ${r.paymentStatus==='pending' ? `<button onclick="rejectPayment('${r.ticketId}')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded">✗</button>` : ''}
+          ${r.paymentStatus==='confirmed' && !r.checkedIn ? `<button onclick="checkinPlayer('${r.ticketId}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded">In</button>` : ''}
+          <button onclick="deletePlayer('${r.id}','${esc(r.playerName)}')" class="px-2 py-1 bg-slate-700 hover:bg-red-700 text-white text-xs rounded">🗑</button>
         </div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
 }
 
 document.getElementById('search-input').addEventListener('input', debounce(loadRegistrations, 300));
 document.getElementById('status-filter').addEventListener('change', loadRegistrations);
 document.getElementById('refresh-regs').addEventListener('click', loadRegistrations);
 
-async function approvePayment(ticketId) {
-  if (!confirm('Approve payment for ticket ' + ticketId + '?')) return;
-  const { ok } = await api('POST', '/api/admin/approve/' + ticketId);
+async function approvePayment(tid) {
+  if (!confirm('Approve payment for ' + tid + '?')) return;
+  const { ok } = await api('POST', '/api/admin/approve/' + tid);
   if (ok) { showToast('Payment approved ✓', 'green'); loadRegistrations(); loadOverview(); }
 }
-
-async function rejectPayment(ticketId) {
-  if (!confirm('Reject payment for ticket ' + ticketId + '?')) return;
-  const { ok } = await api('POST', '/api/admin/reject/' + ticketId);
+async function rejectPayment(tid) {
+  if (!confirm('Reject payment for ' + tid + '?')) return;
+  const { ok } = await api('POST', '/api/admin/reject/' + tid);
   if (ok) { showToast('Payment rejected', 'red'); loadRegistrations(); loadOverview(); }
 }
-
-async function checkinPlayer(ticketId) {
-  if (!confirm('Mark ticket ' + ticketId + ' as checked in?')) return;
-  const { ok, data } = await api('POST', '/api/admin/checkin/' + ticketId);
-  if (ok) { showToast('Player checked in ✓', 'green'); loadRegistrations(); }
-  else if (data.error) { showToast(data.error, 'red'); }
+async function checkinPlayer(tid) {
+  if (!confirm('Check in ticket ' + tid + '?')) return;
+  const { ok, data } = await api('POST', '/api/admin/checkin/' + tid);
+  if (ok) { showToast('Checked in ✓', 'green'); loadRegistrations(); }
+  else showToast(data.error || 'Error', 'red');
 }
-
 async function deletePlayer(id, name) {
-  if (!confirm('Delete player "' + name + '"? This cannot be undone.')) return;
+  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
   const { ok } = await api('DELETE', '/api/admin/player/' + id);
   if (ok) { showToast('Player deleted', 'red'); loadRegistrations(); loadOverview(); }
 }
 
-// ── Tournaments ────────────────────────────────────────────────────────
+// ── Tournaments ───────────────────────────────────────────────────────
 async function loadTournaments() {
-  const { data: tournaments } = await api('GET', '/api/admin/tournaments');
-  if (!Array.isArray(tournaments)) return;
+  const { data: list } = await api('GET', '/api/admin/tournaments');
+  if (!Array.isArray(list)) return;
+  const sc = { active:'text-green-400', upcoming:'text-yellow-400', closed:'text-red-400', inactive:'text-slate-500' };
+  const gameIcons = { FIFA:'⚽', CODM:'🔫', 'Free Fire':'🔥', PUBG:'🎯', eFootball:'⚽', Other:'🎮' };
 
-  const statusColor = { active: 'text-green-400', upcoming: 'text-yellow-400', closed: 'text-red-400', inactive: 'text-slate-400' };
-
-  document.getElementById('tournament-list').innerHTML = tournaments.length === 0
-    ? '<p class="text-slate-400">No tournaments yet. Click "Add Tournament" to create one.</p>'
-    : tournaments.map(t => `
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
-          <div class="flex justify-between items-start flex-wrap gap-3">
-            <div class="flex-1">
-              <div class="flex items-center gap-3 mb-1">
-                <h3 class="font-bold text-white text-lg">${esc(t.name)}</h3>
-                <span class="text-xs font-bold uppercase ${statusColor[t.status] || 'text-slate-400'}">${t.status}</span>
-              </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mt-3">
-                <div><div class="text-slate-400 text-xs">Date</div><div class="font-semibold">${new Date(t.date).toLocaleDateString()}</div></div>
-                <div><div class="text-slate-400 text-xs">Entry Fee</div><div class="font-semibold text-teal-400">₦${Number(t.entryFee).toLocaleString()}</div></div>
-                <div><div class="text-slate-400 text-xs">Players</div><div class="font-semibold">${t.registrations.length} / ${t.maxPlayers}</div></div>
-                <div><div class="text-slate-400 text-xs">Prize Pool</div><div class="font-semibold text-green-400">₦${Number(t.prizePool.first + t.prizePool.second + t.prizePool.third).toLocaleString()}</div></div>
-              </div>
+  document.getElementById('tournament-list').innerHTML = list.length === 0
+    ? '<p class="text-slate-400">No tournaments yet.</p>'
+    : list.map(t => `
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+        <div class="flex justify-between items-start flex-wrap gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="text-lg">${gameIcons[t.game]||'🎮'}</span>
+              <h3 class="font-bold text-white">${esc(t.name)}</h3>
+              <span class="text-xs font-bold uppercase ${sc[t.status]||'text-slate-400'}">${t.status}</span>
             </div>
-            <div class="flex gap-2">
-              <button onclick="editTournament(${JSON.stringify(t).replace(/"/g,'&quot;')})" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 text-sm font-bold rounded transition">Edit</button>
-              <button onclick="deleteTournament(${t.id}, '${esc(t.name)}')" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-400 text-sm font-bold rounded transition">Delete</button>
+            <div class="text-xs text-slate-500 mb-3">${esc(t.game||'FIFA')}</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div><div class="text-slate-400 text-xs">Date</div><div class="font-semibold">${new Date(t.date).toLocaleDateString()}</div></div>
+              <div><div class="text-slate-400 text-xs">Entry Fee</div><div class="font-semibold text-cyan-400">₦${Number(t.entryFee).toLocaleString()}</div></div>
+              <div><div class="text-slate-400 text-xs">Players</div><div class="font-semibold">${t.registrations.length} / ${t.maxPlayers}</div></div>
+              <div><div class="text-slate-400 text-xs">Prize Pool</div><div class="font-semibold text-green-400">₦${Number(t.prizePool.first+t.prizePool.second+t.prizePool.third).toLocaleString()}</div></div>
             </div>
           </div>
+          <div class="flex gap-2 flex-shrink-0">
+            <button onclick="editTournament(${JSON.stringify(t).replace(/"/g,'&quot;')})" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 text-sm font-bold rounded transition">Edit</button>
+            <button onclick="deleteTournament(${t.id},'${esc(t.name)}')" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-400 text-sm font-bold rounded transition">Delete</button>
+          </div>
         </div>
-      `).join('');
+      </div>`).join('');
 }
 
 document.getElementById('add-tournament-btn').addEventListener('click', () => openModal());
+document.getElementById('modal-cancel').addEventListener('click', () => document.getElementById('tournament-modal').classList.add('hidden'));
 
 function openModal(t) {
   document.getElementById('modal-title').textContent = t ? 'Edit Tournament' : 'Add Tournament';
-  document.getElementById('t-edit-id').value = t ? t.id : '';
-  document.getElementById('t-name').value = t ? t.name : '';
-  document.getElementById('t-date').value = t ? t.date : '';
+  document.getElementById('t-edit-id').value    = t ? t.id   : '';
+  document.getElementById('t-name').value       = t ? t.name : '';
+  document.getElementById('t-game').value       = t ? (t.game||'FIFA') : 'FIFA';
+  document.getElementById('t-date').value       = t ? t.date : '';
   document.getElementById('t-maxplayers').value = t ? t.maxPlayers : 16;
-  document.getElementById('t-fee').value = t ? t.entryFee : '';
-  document.getElementById('t-status').value = t ? t.status : 'active';
-  document.getElementById('t-p1').value = t ? t.prizePool.first : '';
-  document.getElementById('t-p2').value = t ? t.prizePool.second : '';
-  document.getElementById('t-p3').value = t ? t.prizePool.third : '';
-  document.getElementById('t-twitch').value = t ? t.twitchLink : '';
+  document.getElementById('t-fee').value        = t ? t.entryFee : '';
+  document.getElementById('t-status').value     = t ? t.status : 'active';
+  document.getElementById('t-p1').value         = t ? t.prizePool.first  : '';
+  document.getElementById('t-p2').value         = t ? t.prizePool.second : '';
+  document.getElementById('t-p3').value         = t ? t.prizePool.third  : '';
+  document.getElementById('t-twitch').value     = t ? t.twitchLink : '';
   document.getElementById('modal-error').classList.add('hidden');
   document.getElementById('tournament-modal').classList.remove('hidden');
 }
-
 function editTournament(t) { openModal(t); }
 
 async function deleteTournament(id, name) {
   if (!confirm('Delete tournament "' + name + '"?')) return;
   const { ok } = await api('DELETE', '/api/admin/tournaments/' + id);
-  if (ok) { showToast('Tournament deleted', 'red'); loadTournaments(); }
+  if (ok) { showToast('Deleted', 'red'); loadTournaments(); }
 }
-
-document.getElementById('modal-cancel').addEventListener('click', () => {
-  document.getElementById('tournament-modal').classList.add('hidden');
-});
 
 document.getElementById('tournament-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('t-edit-id').value;
   const body = {
-    name: document.getElementById('t-name').value,
-    date: document.getElementById('t-date').value,
-    entryFee: document.getElementById('t-fee').value,
-    maxPlayers: document.getElementById('t-maxplayers').value,
-    status: document.getElementById('t-status').value,
-    prizePoolFirst: document.getElementById('t-p1').value,
+    name:            document.getElementById('t-name').value,
+    game:            document.getElementById('t-game').value,
+    date:            document.getElementById('t-date').value,
+    entryFee:        document.getElementById('t-fee').value,
+    maxPlayers:      document.getElementById('t-maxplayers').value,
+    status:          document.getElementById('t-status').value,
+    prizePoolFirst:  document.getElementById('t-p1').value,
     prizePoolSecond: document.getElementById('t-p2').value,
-    prizePoolThird: document.getElementById('t-p3').value,
-    twitchLink: document.getElementById('t-twitch').value
+    prizePoolThird:  document.getElementById('t-p3').value,
+    twitchLink:      document.getElementById('t-twitch').value
   };
-  const endpoint = id ? '/api/admin/tournaments/' + id : '/api/admin/tournaments';
-  const method = id ? 'PUT' : 'POST';
-  const { ok, data } = await api(method, endpoint, body);
-  const errEl = document.getElementById('modal-error');
+  const { ok, data } = await api(id ? 'PUT' : 'POST', id ? '/api/admin/tournaments/' + id : '/api/admin/tournaments', body);
+  if (ok) { document.getElementById('tournament-modal').classList.add('hidden'); showToast(id ? 'Updated ✓' : 'Created ✓', 'green'); loadTournaments(); }
+  else { const el = document.getElementById('modal-error'); el.textContent = data.error || 'Error'; el.classList.remove('hidden'); }
+});
+
+// ── Settings ──────────────────────────────────────────────────────────
+document.getElementById('change-pw-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const succEl = document.getElementById('pw-success');
+  const errEl  = document.getElementById('pw-error');
+  succEl.classList.add('hidden'); errEl.classList.add('hidden');
+  const body = {
+    currentPassword: document.getElementById('pw-current').value,
+    newPassword:     document.getElementById('pw-new').value,
+    confirmPassword: document.getElementById('pw-confirm').value
+  };
+  const { ok, data } = await api('POST', '/api/admin/change-password', body);
   if (ok) {
-    document.getElementById('tournament-modal').classList.add('hidden');
-    showToast(id ? 'Tournament updated ✓' : 'Tournament created ✓', 'green');
-    loadTournaments();
+    succEl.textContent = 'Password updated! Logging you out...';
+    succEl.classList.remove('hidden');
+    document.getElementById('change-pw-form').reset();
+    setTimeout(() => logout(), 1800);
   } else {
-    errEl.textContent = data.error || 'Failed to save tournament';
+    errEl.textContent = data.error || 'Failed to update password';
     errEl.classList.remove('hidden');
   }
 });
 
-// ── Utils ──────────────────────────────────────────────────────────────
-function esc(str) {
-  if (str == null) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// ── Utils ─────────────────────────────────────────────────────────────
+function esc(s) { return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; }
 
-function debounce(fn, ms) {
-  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-}
-
-let toastTimeout;
+let toastT;
 function showToast(msg, color) {
-  clearTimeout(toastTimeout);
-  const existing = document.getElementById('toast');
-  if (existing) existing.remove();
-  const t = document.createElement('div');
-  t.id = 'toast';
-  const bg = color === 'green' ? 'bg-green-600' : color === 'red' ? 'bg-red-600' : 'bg-slate-700';
-  t.className = `fixed bottom-6 right-6 ${bg} text-white px-5 py-3 rounded-xl shadow-xl z-50 text-sm font-bold transition`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  toastTimeout = setTimeout(() => t.remove(), 3000);
+  clearTimeout(toastT);
+  document.getElementById('toast')?.remove();
+  const bg = color==='green' ? 'bg-green-600' : color==='red' ? 'bg-red-600' : 'bg-slate-700';
+  const el = document.createElement('div');
+  el.id = 'toast';
+  el.className = `fixed bottom-6 right-6 ${bg} text-white px-5 py-3 rounded-xl shadow-xl z-50 text-sm font-bold`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  toastT = setTimeout(() => el.remove(), 3000);
 }
 
-// ── Bootstrap ──────────────────────────────────────────────────────────
 checkAuth();
 </script>
 </body>

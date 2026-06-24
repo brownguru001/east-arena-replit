@@ -14,19 +14,21 @@ app.use(express.static('public'));
 // CONFIG
 // ============================================================
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'eastarena2024';
 const DATA_FILE = path.join(__dirname, 'data.json');
 
+// In-memory session store
 const sessions = new Set();
 
 // ============================================================
 // DATA HELPERS
 // ============================================================
 const defaultData = () => ({
+  settings: {},
   tournaments: [
     {
       id: 1,
       name: 'East Arena Championship S1',
+      game: 'FIFA',
       date: '2024-07-20',
       entryFee: 30000,
       prizePool: { first: 150000, second: 80000, third: 40000 },
@@ -42,7 +44,9 @@ const defaultData = () => ({
 const loadData = () => {
   if (fs.existsSync(DATA_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      if (!parsed.settings) parsed.settings = {};
+      return parsed;
     } catch (e) {
       return defaultData();
     }
@@ -53,6 +57,15 @@ const loadData = () => {
 const saveData = (data) => {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 };
+
+// Password resolution:
+// 1. data.settings.adminPassword (set via change-password feature) takes priority
+// 2. ADMIN_PASSWORD env var
+// 3. hard fallback (never exposed in code now)
+function getAdminPassword() {
+  const data = loadData();
+  return data.settings?.adminPassword || process.env.ADMIN_PASSWORD || '';
+}
 
 // ============================================================
 // AUTH MIDDLEWARE
@@ -70,12 +83,12 @@ const requireAdmin = (req, res, next) => {
 // ============================================================
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+  if (username === ADMIN_USERNAME && password === getAdminPassword()) {
     const token = uuidv4();
     sessions.add(token);
     res.json({ success: true, token });
   } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+    res.status(401).json({ error: 'Invalid username or password' });
   }
 });
 
@@ -89,13 +102,35 @@ app.get('/api/admin/check', requireAdmin, (req, res) => {
   res.json({ authenticated: true });
 });
 
+app.post('/api/admin/change-password', requireAdmin, (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required' });
+  }
+  if (currentPassword !== getAdminPassword()) {
+    return res.status(400).json({ error: 'Current password is incorrect' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: 'New password and confirmation do not match' });
+  }
+  const data = loadData();
+  data.settings.adminPassword = newPassword;
+  saveData(data);
+  // Invalidate all existing sessions so re-login is required
+  sessions.clear();
+  res.json({ success: true, message: 'Password updated. Please log in again.' });
+});
+
 // ============================================================
 // PUBLIC ROUTES
 // ============================================================
-
 app.get('/api/tournaments', (req, res) => {
   const data = loadData();
-  res.json(data.tournaments.filter(t => t.status === 'active' || t.status === 'upcoming'));
+  const visible = data.tournaments.filter(t => t.status === 'active' || t.status === 'upcoming');
+  res.json(visible);
 });
 
 app.get('/api/ticket/:ticketId', (req, res) => {
@@ -105,8 +140,9 @@ app.get('/api/ticket/:ticketId', (req, res) => {
   const tournament = data.tournaments.find(t => t.id === reg.tournamentId);
   res.json({
     ...reg,
+    qrCode: reg.qrCode, // return real QR data URL
     tournament: tournament
-      ? { name: tournament.name, date: tournament.date, twitchLink: tournament.twitchLink, entryFee: tournament.entryFee }
+      ? { name: tournament.name, date: tournament.date, twitchLink: tournament.twitchLink, entryFee: tournament.entryFee, game: tournament.game }
       : null
   });
 });
@@ -124,17 +160,18 @@ app.post('/api/register', async (req, res) => {
     if (!tournament) return res.status(404).json({ error: 'Tournament not found' });
 
     if (tournament.status !== 'active' && tournament.status !== 'upcoming') {
-      return res.status(400).json({ error: 'Tournament is not accepting registrations' });
+      return res.status(400).json({ error: 'This tournament is not currently accepting registrations' });
     }
 
-    const tournamentRegs = data.registrations.filter(
+    // Capacity check (only count non-rejected)
+    const activeRegs = data.registrations.filter(
       r => r.tournamentId === parseInt(tournamentId) && r.paymentStatus !== 'rejected'
     );
-
-    if (tournamentRegs.length >= tournament.maxPlayers) {
-      return res.status(400).json({ error: `Tournament is full (max ${tournament.maxPlayers} players)` });
+    if (activeRegs.length >= tournament.maxPlayers) {
+      return res.status(400).json({ error: `Tournament is full (maximum ${tournament.maxPlayers} players)` });
     }
 
+    // Duplicate check
     const duplicate = data.registrations.find(r =>
       r.tournamentId === parseInt(tournamentId) &&
       r.paymentStatus !== 'rejected' &&
@@ -163,6 +200,7 @@ app.post('/api/register', async (req, res) => {
       tournamentId: parseInt(tournamentId),
       paymentStatus: 'pending',
       paymentReference: null,
+      referenceSubmittedAt: null,
       checkedIn: false,
       checkedInAt: null,
       approvedAt: null,
@@ -175,17 +213,35 @@ app.post('/api/register', async (req, res) => {
     tournament.registrations.push(registration.id);
     saveData(data);
 
+    // ── PAYMENT PROVIDER HOOK ──────────────────────────────────────────
+    // PAYMENT_PROVIDER env var controls payment flow:
+    //   'manual'   (default) → bank transfer, admin approves manually
+    //   'paystack' (future)  → auto-initiates Paystack inline popup
+    //
+    // To integrate Paystack later:
+    //   1. Set PAYMENT_PROVIDER=paystack and PAYSTACK_SECRET_KEY in env/secrets
+    //   2. Call Paystack initialize API here and return authorization_url
+    //   3. Add POST /api/paystack/webhook to auto-confirm on successful charge
+    //   4. Frontend reads paymentProvider from response to show correct UI
+    // ─────────────────────────────────────────────────────────────────
+    const paymentProvider = process.env.PAYMENT_PROVIDER || 'manual';
+
     res.json({
       success: true,
-      message: 'Registration successful! Submit your payment reference to confirm your spot.',
+      message: 'Registration successful! Follow the payment instructions to secure your spot.',
       ticketId,
       qrCode,
+      paymentProvider,
       paymentInfo: {
+        // Manual bank transfer details — update these with your real account
         amount: tournament.entryFee,
-        bankName: 'Access Bank',
-        accountName: 'East Arena Gaming',
-        accountNumber: '0123456789',
+        bankName: process.env.BANK_NAME || 'Access Bank',
+        accountName: process.env.ACCOUNT_NAME || 'East Arena Gaming',
+        accountNumber: process.env.ACCOUNT_NUMBER || '0123456789',
         reference: ticketId
+        // Paystack fields will go here when PAYMENT_PROVIDER=paystack:
+        // paystackAuthUrl: <from Paystack API>,
+        // paystackRef: <generated ref>,
       }
     });
   } catch (error) {
@@ -204,23 +260,24 @@ app.post('/api/submit-payment', (req, res) => {
   if (reg.paymentStatus === 'confirmed') {
     return res.status(400).json({ error: 'Payment is already confirmed' });
   }
+  if (reg.paymentStatus === 'rejected') {
+    return res.status(400).json({ error: 'This registration was rejected. Please contact support.' });
+  }
   reg.paymentReference = paymentReference.trim();
-  reg.paymentStatus = 'pending';
   reg.referenceSubmittedAt = new Date().toISOString();
   saveData(data);
-  res.json({ success: true, message: 'Payment reference submitted. Awaiting admin approval.' });
+  res.json({ success: true, message: 'Payment reference submitted. An admin will confirm shortly.' });
 });
 
 // ============================================================
-// ADMIN ROUTES (all protected)
+// ADMIN ROUTES (protected)
 // ============================================================
-
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
   const data = loadData();
   const regs = data.registrations;
   const confirmed = regs.filter(r => r.paymentStatus === 'confirmed');
-  const pending = regs.filter(r => r.paymentStatus === 'pending');
-  const rejected = regs.filter(r => r.paymentStatus === 'rejected');
+  const pending   = regs.filter(r => r.paymentStatus === 'pending');
+  const rejected  = regs.filter(r => r.paymentStatus === 'rejected');
 
   const revenue = confirmed.reduce((sum, r) => {
     const t = data.tournaments.find(t => t.id === r.tournamentId);
@@ -245,7 +302,7 @@ app.get('/api/admin/registrations', requireAdmin, (req, res) => {
 
   let regs = data.registrations.map(r => {
     const t = data.tournaments.find(t => t.id === r.tournamentId);
-    return { ...r, tournamentName: t ? t.name : 'Unknown' };
+    return { ...r, qrCode: undefined, tournamentName: t ? t.name : 'Unknown', game: t?.game || '' };
   });
 
   if (status) regs = regs.filter(r => r.paymentStatus === status);
@@ -288,7 +345,7 @@ app.post('/api/admin/checkin/:ticketId', requireAdmin, (req, res) => {
   const reg = data.registrations.find(r => r.ticketId === req.params.ticketId);
   if (!reg) return res.status(404).json({ error: 'Ticket not found' });
   if (reg.paymentStatus !== 'confirmed') {
-    return res.status(400).json({ error: 'Cannot check in — payment not confirmed' });
+    return res.status(400).json({ error: 'Cannot check in — payment not yet confirmed' });
   }
   reg.checkedIn = true;
   reg.checkedInAt = new Date().toISOString();
@@ -316,13 +373,14 @@ app.get('/api/admin/export', requireAdmin, (req, res) => {
   res.send(JSON.stringify(data, null, 2));
 });
 
+// Tournament management
 app.get('/api/admin/tournaments', requireAdmin, (req, res) => {
   const data = loadData();
   res.json(data.tournaments);
 });
 
 app.post('/api/admin/tournaments', requireAdmin, (req, res) => {
-  const { name, date, entryFee, prizePoolFirst, prizePoolSecond, prizePoolThird, maxPlayers, twitchLink, status } = req.body;
+  const { name, game, date, entryFee, prizePoolFirst, prizePoolSecond, prizePoolThird, maxPlayers, twitchLink, status } = req.body;
   if (!name || !date || !entryFee) {
     return res.status(400).json({ error: 'Name, date, and entry fee are required' });
   }
@@ -331,12 +389,13 @@ app.post('/api/admin/tournaments', requireAdmin, (req, res) => {
   const tournament = {
     id: newId,
     name,
+    game: game || 'FIFA',
     date,
     entryFee: parseInt(entryFee),
     prizePool: {
-      first: parseInt(prizePoolFirst) || 0,
+      first:  parseInt(prizePoolFirst)  || 0,
       second: parseInt(prizePoolSecond) || 0,
-      third: parseInt(prizePoolThird) || 0
+      third:  parseInt(prizePoolThird)  || 0
     },
     status: status || 'active',
     twitchLink: twitchLink || '',
@@ -352,16 +411,17 @@ app.put('/api/admin/tournaments/:id', requireAdmin, (req, res) => {
   const data = loadData();
   const t = data.tournaments.find(t => t.id === parseInt(req.params.id));
   if (!t) return res.status(404).json({ error: 'Tournament not found' });
-  const { name, date, entryFee, prizePoolFirst, prizePoolSecond, prizePoolThird, maxPlayers, twitchLink, status } = req.body;
-  if (name !== undefined) t.name = name;
-  if (date !== undefined) t.date = date;
-  if (entryFee !== undefined) t.entryFee = parseInt(entryFee);
-  if (prizePoolFirst !== undefined) t.prizePool.first = parseInt(prizePoolFirst) || 0;
+  const { name, game, date, entryFee, prizePoolFirst, prizePoolSecond, prizePoolThird, maxPlayers, twitchLink, status } = req.body;
+  if (name !== undefined)           t.name       = name;
+  if (game !== undefined)           t.game       = game;
+  if (date !== undefined)           t.date       = date;
+  if (entryFee !== undefined)       t.entryFee   = parseInt(entryFee);
+  if (prizePoolFirst !== undefined)  t.prizePool.first  = parseInt(prizePoolFirst)  || 0;
   if (prizePoolSecond !== undefined) t.prizePool.second = parseInt(prizePoolSecond) || 0;
-  if (prizePoolThird !== undefined) t.prizePool.third = parseInt(prizePoolThird) || 0;
-  if (maxPlayers !== undefined) t.maxPlayers = parseInt(maxPlayers);
-  if (twitchLink !== undefined) t.twitchLink = twitchLink;
-  if (status !== undefined) t.status = status;
+  if (prizePoolThird !== undefined)  t.prizePool.third  = parseInt(prizePoolThird)  || 0;
+  if (maxPlayers !== undefined)     t.maxPlayers = parseInt(maxPlayers);
+  if (twitchLink !== undefined)     t.twitchLink = twitchLink;
+  if (status !== undefined)         t.status     = status;
   saveData(data);
   res.json({ success: true, tournament: t });
 });
@@ -391,7 +451,6 @@ app.get('/ticket/:ticketId', (req, res) => {
 // ============================================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✓ East Arena running at http://localhost:${PORT}`);
-  console.log(`  Admin panel: http://localhost:${PORT}/admin`);
-  console.log(`  Admin login: ${ADMIN_USERNAME} / ${ADMIN_PASSWORD}`);
+  console.log(`✓ East Arena Gaming Tournament — http://localhost:${PORT}`);
+  console.log(`  Admin: http://localhost:${PORT}/admin`);
 });
