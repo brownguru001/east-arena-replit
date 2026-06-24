@@ -38,3 +38,4 @@ externalPort = 80
 [userenv.shared]
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "Onuachu247"
+APP_URL = "https://east-arena-replit.onrender.com"
