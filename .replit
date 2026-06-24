@@ -38,6 +38,6 @@ externalPort = 80
 [userenv.shared]
 ADMIN_USERNAME = "Ceobruno"
 ADMIN_PASSWORD = "Onuachu247"
-BANK_NAME = "Access Bank"
-ACCOUNT_NAME = "East Arena Gaming"
-ACCOUNT_NUMBER = "ENTER_YOUR_REAL_ACCOUNT_NUMBER"
+BANK_NAME = "OPay "
+ACCOUNT_NAME = "Onuachu Bruno Odinakachukwu "
+ACCOUNT_NUMBER = "8087268132"

@@ -84,6 +84,7 @@
       <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="checkin">📱 Check-In</button>
       <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="tournaments">🏆 Tournaments</button>
       <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="announcements">📢 Announcements</button>
+      <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="analytics">📈 Analytics</button>
       <button class="tab-btn px-4 py-3 text-sm font-semibold text-slate-500 hover:text-white transition whitespace-nowrap" data-tab="settings">⚙️ Settings</button>
     </div>
   </div>
@@ -247,6 +248,68 @@
       </div>
     </div>
 
+    <!-- ── ANALYTICS ───────────────────────────────────────────────── -->
+    <div id="tab-analytics" class="tab-content hidden">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <h2 class="text-xl font-black text-white">Analytics &amp; Tracking</h2>
+        <button onclick="loadAnalytics()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm transition border border-slate-700">🔄 Refresh</button>
+      </div>
+
+      <!-- Summary Stats -->
+      <div id="analytics-summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+        <div class="col-span-2 sm:col-span-3 lg:col-span-6 text-slate-600 text-sm">Loading analytics...</div>
+      </div>
+
+      <!-- Device & Browser + Email Status -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-300 text-sm mb-3">📱 Devices</h3>
+          <div id="analytics-devices" class="space-y-2 text-sm text-slate-400">—</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-300 text-sm mb-3">🌐 Browsers</h3>
+          <div id="analytics-browsers" class="space-y-2 text-sm text-slate-400">—</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-300 text-sm mb-3">📧 Email System</h3>
+          <div id="analytics-email-status" class="text-sm">Checking...</div>
+          <div id="analytics-email-log" class="mt-3 space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- Top Pages -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-5">
+        <h3 class="font-bold text-white mb-3">🔗 Top Pages</h3>
+        <div id="analytics-top-pages" class="space-y-1.5 text-sm text-slate-400">—</div>
+      </div>
+
+      <!-- Recent Registrations -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-5">
+        <h3 class="font-bold text-white mb-3">📝 Recent Registrations</h3>
+        <div id="analytics-recent-regs" class="space-y-2">—</div>
+      </div>
+
+      <!-- Recent Page Views -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <h3 class="font-bold text-white mb-3">👁 Recent Page Views (last 50)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs min-w-max">
+            <thead class="text-slate-500 uppercase">
+              <tr>
+                <th class="text-left pb-2 pr-4">Path</th>
+                <th class="text-left pb-2 pr-4">Time</th>
+                <th class="text-left pb-2 pr-4">Device</th>
+                <th class="text-left pb-2">Browser</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-views-tbody" class="divide-y divide-slate-800/50">
+              <tr><td colspan="4" class="text-slate-600 py-4">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ── SETTINGS ────────────────────────────────────────────────── -->
     <div id="tab-settings" class="tab-content hidden">
       <h2 class="text-xl font-black text-white mb-6">Settings</h2>
@@ -282,13 +345,15 @@
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
           <h3 class="font-black text-white mb-4">📧 Email System</h3>
           <div id="email-config-status" class="text-slate-500 text-sm">Checking...</div>
+          <div class="mt-4 flex gap-2">
+            <button id="test-email-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition">📤 Send Test Email</button>
+          </div>
+          <div id="test-email-result" class="hidden mt-3 rounded-xl p-3 text-sm"></div>
           <div class="mt-4 bg-slate-800/50 rounded-xl p-4 text-xs text-slate-500 space-y-1">
-            <p class="font-semibold text-slate-400">To enable emails, set these environment variables:</p>
-            <p><code class="text-amber-400">SMTP_HOST</code> — e.g. smtp.gmail.com</p>
-            <p><code class="text-amber-400">SMTP_PORT</code> — e.g. 587</p>
-            <p><code class="text-amber-400">SMTP_USER</code> — your email address</p>
-            <p><code class="text-amber-400">SMTP_PASS</code> — your email password or app password</p>
-            <p><code class="text-amber-400">EMAIL_FROM</code> — sender name &lt;email&gt;</p>
+            <p class="font-semibold text-slate-400">Email is configured via Secrets:</p>
+            <p><code class="text-amber-400">EMAIL_USER</code> — your Gmail address</p>
+            <p><code class="text-amber-400">EMAIL_PASS</code> — Gmail App Password (16 chars, not your account password)</p>
+            <p class="text-slate-600 mt-2">To get an App Password: Google Account → Security → 2-Step Verification → App passwords</p>
           </div>
         </div>
 
@@ -479,6 +544,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (tab === 'overview')      loadOverview();
     if (tab === 'checkin')       loadRecentCheckins();
     if (tab === 'announcements') loadAnnouncements();
+    if (tab === 'analytics')     loadAnalytics();
     if (tab === 'settings')      loadSettingsData();
   });
 });
@@ -881,6 +947,127 @@ async function deleteAnn(id) {
   const { ok } = await api('DELETE', '/api/admin/announcements/' + id);
   if (ok) loadAnnouncements();
 }
+
+// ── Analytics ────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const { ok, data } = await api('GET', '/api/admin/analytics');
+  if (!ok || !data.summary) return;
+
+  const s = data.summary;
+  const statCards = [
+    { label:'Page Views',      value: s.totalPageViews,        color:'text-white',       bg:'bg-slate-800 border-slate-700' },
+    { label:'Unique Visitors', value: s.uniqueVisitors,        color:'text-blue-400',    bg:'bg-blue-500/5 border-blue-500/20' },
+    { label:"Today's Views",   value: s.todayPageViews,        color:'text-cyan-400',    bg:'bg-cyan-500/5 border-cyan-500/20' },
+    { label:'Registrations',   value: s.totalRegistrations,    color:'text-green-400',   bg:'bg-green-500/5 border-green-500/20' },
+    { label:'Confirmed',       value: s.confirmedRegistrations,color:'text-emerald-400', bg:'bg-emerald-500/5 border-emerald-500/20' },
+    { label:'Conversion',      value: s.conversionRate + '%',  color:'text-amber-400',   bg:'bg-amber-500/5 border-amber-500/20' },
+  ];
+  document.getElementById('analytics-summary').innerHTML = statCards.map(c =>
+    `<div class="rounded-xl border p-4 ${c.bg}">
+      <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1">${c.label}</div>
+      <div class="text-2xl font-black ${c.color}">${c.value}</div>
+    </div>`
+  ).join('');
+
+  // Devices
+  const devTotal = Object.values(data.devices).reduce((a,b) => a+b, 0) || 1;
+  document.getElementById('analytics-devices').innerHTML = Object.entries(data.devices).length
+    ? Object.entries(data.devices).sort((a,b) => b[1]-a[1]).map(([k,v]) => `
+        <div class="flex items-center gap-2">
+          <div class="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-blue-400 h-full rounded-full" style="width:${Math.round(v/devTotal*100)}%"></div>
+          </div>
+          <span class="w-14 text-right font-semibold text-white">${k}</span>
+          <span class="text-slate-500 w-8 text-right">${v}</span>
+        </div>`).join('')
+    : '<span class="text-slate-600 text-xs">No data yet</span>';
+
+  // Browsers
+  const brwTotal = Object.values(data.browsers).reduce((a,b) => a+b, 0) || 1;
+  document.getElementById('analytics-browsers').innerHTML = Object.entries(data.browsers).length
+    ? Object.entries(data.browsers).sort((a,b) => b[1]-a[1]).map(([k,v]) => `
+        <div class="flex items-center gap-2">
+          <div class="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-purple-400 h-full rounded-full" style="width:${Math.round(v/brwTotal*100)}%"></div>
+          </div>
+          <span class="w-14 text-right font-semibold text-white">${k}</span>
+          <span class="text-slate-500 w-8 text-right">${v}</span>
+        </div>`).join('')
+    : '<span class="text-slate-600 text-xs">No data yet</span>';
+
+  // Email status + log
+  const emailEl = document.getElementById('analytics-email-status');
+  emailEl.innerHTML = s.emailConfigured
+    ? '<span class="text-green-400 font-bold text-xs">✓ Configured &amp; Active</span>'
+    : '<span class="text-yellow-400 font-bold text-xs">⚠ Not configured</span>';
+  const logEl = document.getElementById('analytics-email-log');
+  if (data.emailLog && data.emailLog.length) {
+    const statusColor = { sent:'text-green-400', failed:'text-red-400', skipped:'text-yellow-500' };
+    logEl.innerHTML = '<div class="text-slate-600 text-xs font-semibold uppercase tracking-wide mb-1">Last emails</div>'
+      + data.emailLog.slice(0, 8).map(e => `
+        <div class="text-xs py-1 border-b border-slate-800 flex justify-between gap-1">
+          <span class="${statusColor[e.status]||'text-slate-400'} font-bold w-12 shrink-0">${e.status}</span>
+          <span class="truncate text-slate-400 flex-1">${esc(e.to)}</span>
+        </div>`).join('');
+  } else {
+    logEl.innerHTML = '<div class="text-slate-600 text-xs">No emails sent yet</div>';
+  }
+
+  // Top pages
+  document.getElementById('analytics-top-pages').innerHTML = data.topPages && data.topPages.length
+    ? data.topPages.map((p, i) => `
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-800/50 last:border-0">
+          <span class="text-slate-300 font-mono">${esc(p.path)}</span>
+          <span class="text-amber-400 font-bold text-xs">${p.count} view${p.count !== 1 ? 's' : ''}</span>
+        </div>`).join('')
+    : '<span class="text-slate-600 text-xs">No page view data yet</span>';
+
+  // Recent registrations
+  const statusBg = { confirmed:'text-green-400', pending:'text-yellow-400', rejected:'text-red-400' };
+  document.getElementById('analytics-recent-regs').innerHTML = data.recentRegistrations && data.recentRegistrations.length
+    ? data.recentRegistrations.map(r => `
+        <div class="flex justify-between items-center py-2 border-b border-slate-800/50 text-xs">
+          <div>
+            <span class="font-semibold text-white">${esc(r.playerName)}</span>
+            <span class="text-slate-500 ml-1">@${esc(r.gamertag)}</span>
+            <span class="text-slate-600 ml-2">${esc(r.tournamentName)}</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="font-bold ${statusBg[r.paymentStatus]||'text-slate-400'}">${r.paymentStatus}</span>
+            <span class="text-slate-600">${new Date(r.registeredAt).toLocaleDateString()}</span>
+          </div>
+        </div>`).join('')
+    : '<span class="text-slate-600 text-xs">No registrations yet</span>';
+
+  // Recent page views table
+  document.getElementById('analytics-views-tbody').innerHTML = data.recentViews && data.recentViews.length
+    ? data.recentViews.map(v => `
+        <tr class="hover:bg-slate-800/20">
+          <td class="py-1.5 pr-4 font-mono text-slate-300">${esc(v.path)}</td>
+          <td class="py-1.5 pr-4 text-slate-500 whitespace-nowrap">${new Date(v.timestamp).toLocaleString('en-NG',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'})}</td>
+          <td class="py-1.5 pr-4 text-slate-400">${v.device}</td>
+          <td class="py-1.5 text-slate-400">${v.browser}</td>
+        </tr>`).join('')
+    : '<tr><td colspan="4" class="text-slate-600 py-4">No page views recorded yet. Views accumulate as people visit the site.</td></tr>';
+}
+
+// ── Test Email ────────────────────────────────────────────────────────
+document.getElementById('test-email-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('test-email-btn');
+  const resultEl = document.getElementById('test-email-result');
+  btn.disabled = true; btn.textContent = '⏳ Sending...';
+  resultEl.classList.add('hidden');
+  const { ok, data } = await api('POST', '/api/admin/test-email');
+  btn.disabled = false; btn.textContent = '📤 Send Test Email';
+  resultEl.classList.remove('hidden');
+  if (ok) {
+    resultEl.className = 'mt-3 rounded-xl p-3 text-sm bg-green-500/10 border border-green-500/30 text-green-300';
+    resultEl.textContent = '✓ ' + (data.message || 'Test email sent!');
+  } else {
+    resultEl.className = 'mt-3 rounded-xl p-3 text-sm bg-red-500/10 border border-red-500/30 text-red-300';
+    resultEl.textContent = data.error || 'Failed to send test email.';
+  }
+});
 
 // ── Settings ──────────────────────────────────────────────────────────
 async function loadSettingsData() {

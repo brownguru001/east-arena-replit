@@ -44,6 +44,60 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ============================================================
+// ANALYTICS — in-memory, no disk write per request
+// ============================================================
+const MAX_PAGE_VIEWS = 500;
+const MAX_EVENTS    = 200;
+const analyticsStore = { pageViews: [], events: [] };
+
+function detectDevice(ua) {
+  if (!ua) return 'unknown';
+  if (/mobile|android|iphone|ipod/i.test(ua)) return 'mobile';
+  if (/tablet|ipad/i.test(ua)) return 'tablet';
+  return 'desktop';
+}
+function detectBrowser(ua) {
+  if (!ua) return 'unknown';
+  if (/Edg\//i.test(ua)) return 'Edge';
+  if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome';
+  if (/Firefox/i.test(ua)) return 'Firefox';
+  if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) return 'Safari';
+  if (/Opera|OPR/i.test(ua)) return 'Opera';
+  return 'Other';
+}
+function hashIp(ip) {
+  if (!ip || ip === '::1' || ip === '127.0.0.1') return 'localhost';
+  return crypto.createHash('md5').update(ip).digest('hex').slice(0, 10);
+}
+function trackPageView(req) {
+  const ua  = req.headers['user-agent'] || '';
+  const ip  = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '';
+  analyticsStore.pageViews.unshift({
+    path: req.path,
+    timestamp: new Date().toISOString(),
+    device:   detectDevice(ua),
+    browser:  detectBrowser(ua),
+    ipHash:   hashIp(ip),
+    referrer: req.headers.referer || null
+  });
+  if (analyticsStore.pageViews.length > MAX_PAGE_VIEWS) analyticsStore.pageViews.pop();
+}
+function trackEvent(type, meta = {}) {
+  analyticsStore.events.unshift({ type, ...meta, timestamp: new Date().toISOString() });
+  if (analyticsStore.events.length > MAX_EVENTS) analyticsStore.events.pop();
+}
+
+// Track page views — only HTML pages, skip API + static assets
+app.use((req, res, next) => {
+  if (req.method === 'GET'
+    && !req.path.startsWith('/api/')
+    && !/\.(js|css|png|svg|ico|jpg|webp|woff|woff2|ttf|map|json|txt)$/.test(req.path)) {
+    trackPageView(req);
+  }
+  next();
+});
+
+// ============================================================
 // RATE LIMITING
 // ============================================================
 const registrationLimiter = rateLimit({
@@ -71,32 +125,50 @@ const sessions = new Set();
 // EMAIL SETUP
 // ============================================================
 function createMailer() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!host || !user || !pass) return null;
+  const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+  const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+  if (!user || !pass) return null;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '587');
   return nodemailer.createTransport({
     host,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user, pass }
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false }
   });
 }
 
-const EMAIL_FROM = process.env.EMAIL_FROM || 'East Arena Gaming <noreply@eastarena.gg>';
+const EMAIL_FROM = process.env.EMAIL_FROM
+  || (process.env.EMAIL_USER ? `East Arena Gaming <${process.env.EMAIL_USER}>` : 'East Arena Gaming <noreply@eastarena.gg>');
+
+// Email delivery log — last 50 sends, admin-only visibility
+const emailDeliveryLog = [];
+const MAX_EMAIL_LOG = 50;
 
 async function sendEmail(to, subject, html, attachments = []) {
   const mailer = createMailer();
+  const logEntry = { to, subject, sentAt: new Date().toISOString(), status: 'sent', error: null };
   if (!mailer) {
-    console.log(`[EMAIL SKIPPED — SMTP not configured] To: ${to} | Subject: ${subject}`);
+    logEntry.status = 'skipped';
+    logEntry.error = 'SMTP not configured';
+    console.log(`[EMAIL SKIPPED] To: ${to} | Subject: ${subject}`);
+    emailDeliveryLog.unshift(logEntry);
+    if (emailDeliveryLog.length > MAX_EMAIL_LOG) emailDeliveryLog.pop();
     return false;
   }
   try {
     await mailer.sendMail({ from: EMAIL_FROM, to, subject, html, attachments });
     console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
+    emailDeliveryLog.unshift(logEntry);
+    if (emailDeliveryLog.length > MAX_EMAIL_LOG) emailDeliveryLog.pop();
     return true;
   } catch (err) {
+    logEntry.status = 'failed';
+    logEntry.error = err.message;
     console.error(`[EMAIL ERROR] To: ${to} | ${err.message}`);
+    emailDeliveryLog.unshift(logEntry);
+    if (emailDeliveryLog.length > MAX_EMAIL_LOG) emailDeliveryLog.pop();
     return false;
   }
 }
@@ -590,6 +662,9 @@ app.post('/api/register', registrationLimiter, async (req, res) => {
     tournament.registrations.push(registration.id);
     saveData(data);
 
+    // Track registration event
+    trackEvent('registration', { ticketId, tournamentId: parseInt(tournamentId), isFree });
+
     // Send confirmation email (non-blocking)
     emailRegistrationConfirmation(registration, tournament).catch(console.error);
 
@@ -960,9 +1035,80 @@ app.delete('/api/admin/announcements/:id', requireAdmin, (req, res) => {
 
 // Email config status (admin only)
 app.get('/api/admin/email-status', requireAdmin, (req, res) => {
+  const configured = !!(process.env.EMAIL_USER || process.env.SMTP_USER);
+  res.json({ configured, from: EMAIL_FROM });
+});
+
+// Test email — sends a test message to the admin's own email address
+app.post('/api/admin/test-email', requireAdmin, async (req, res) => {
+  const mailer = createMailer();
+  if (!mailer) {
+    return res.status(400).json({ error: 'Email not configured. Add EMAIL_USER and EMAIL_PASS to Secrets.' });
+  }
+  const adminEmail = process.env.EMAIL_USER || process.env.SMTP_USER;
+  try {
+    await mailer.verify();
+    const testHtml = emailBase(`<div class="card">
+      <div class="header"><h1>🏆 EAST ARENA</h1><p>Email System Test</p></div>
+      <div class="body">
+        <h2 style="color:#34d399">✅ Email System Working!</h2>
+        <p style="color:#94a3b8;font-size:14px">Your SMTP configuration is correct. Registration confirmations, payment receipts, and QR code tickets will be delivered successfully.</p>
+        <div class="row"><span class="label">Tested At</span><span class="value">${new Date().toLocaleString('en-NG')}</span></div>
+        <div class="row"><span class="label">Sending From</span><span class="value">${esc(EMAIL_FROM)}</span></div>
+        <div class="row"><span class="label">Status</span><span class="value green">✓ Verified</span></div>
+      </div>
+      <div class="footer">East Arena Gaming · SMTP connection verified ✓</div>
+    </div>`);
+    await mailer.sendMail({ from: EMAIL_FROM, to: adminEmail, subject: '✅ East Arena — Email System Verified', html: testHtml });
+    res.json({ success: true, message: `Test email sent to ${adminEmail}` });
+  } catch (err) {
+    res.status(500).json({ error: `SMTP test failed: ${err.message}. For Gmail, make sure you're using an App Password (not your account password).` });
+  }
+});
+
+// Analytics — admin only, never exposed publicly
+app.get('/api/admin/analytics', requireAdmin, (req, res) => {
+  const data = loadData();
+  const regs  = data.registrations;
+  const views = analyticsStore.pageViews;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const uniqueIps     = new Set(views.map(v => v.ipHash)).size;
+  const todayViews    = views.filter(v => v.timestamp.startsWith(today)).length;
+  const todayUniqueIps = new Set(views.filter(v => v.timestamp.startsWith(today)).map(v => v.ipHash)).size;
+
+  const devices  = views.reduce((a, v) => { a[v.device]  = (a[v.device]  || 0) + 1; return a; }, {});
+  const browsers = views.reduce((a, v) => { a[v.browser] = (a[v.browser] || 0) + 1; return a; }, {});
+
+  const pathCounts = views.reduce((a, v) => { a[v.path] = (a[v.path] || 0) + 1; return a; }, {});
+  const topPages   = Object.entries(pathCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([path, count]) => ({ path, count }));
+
+  const confirmedRegs = regs.filter(r => r.paymentStatus === 'confirmed').length;
+  const conversionRate = uniqueIps > 0 ? ((rgs => rgs / uniqueIps * 100)(regs.length)).toFixed(1) : '0.0';
+
+  const recentRegs = regs.slice().sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt)).slice(0, 20).map(r => {
+    const t = data.tournaments.find(t => t.id === r.tournamentId);
+    return { playerName: r.playerName, gamertag: r.gamertag, tournamentName: t?.name || 'Unknown', paymentStatus: r.paymentStatus, registeredAt: r.registeredAt };
+  });
+
   res.json({
-    configured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
-    from: EMAIL_FROM
+    summary: {
+      totalPageViews:     views.length,
+      uniqueVisitors:     uniqueIps,
+      todayPageViews:     todayViews,
+      todayUniqueVisitors: todayUniqueIps,
+      totalRegistrations: regs.length,
+      confirmedRegistrations: confirmedRegs,
+      conversionRate,
+      emailConfigured:    !!(process.env.EMAIL_USER || process.env.SMTP_USER),
+    },
+    devices,
+    browsers,
+    topPages,
+    recentViews:         views.slice(0, 50),
+    recentRegistrations: recentRegs,
+    emailLog:            emailDeliveryLog.slice(0, 30),
+    events:              analyticsStore.events.slice(0, 50),
   });
 });
 
@@ -1084,5 +1230,10 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ East Arena Gaming Tournament — http://localhost:${PORT}`);
   console.log(`  Admin: http://localhost:${PORT}/admin`);
   console.log(`  Default admin password: ${getAdminPassword()}`);
-  console.log(`  Email: ${process.env.SMTP_HOST ? 'configured' : 'NOT configured (emails will be skipped)'}`);
+  const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+  console.log(`  Email: ${emailUser ? `configured ✓ (${emailUser})` : 'NOT configured — set EMAIL_USER + EMAIL_PASS'}`);
+  console.log(`  Paystack: ${process.env.PAYSTACK_SECRET_KEY ? 'configured ✓' : 'NOT configured'}`);
+  if (emailUser) {
+    createMailer()?.verify().then(() => console.log('  SMTP connection: ✓ verified')).catch(e => console.warn(`  SMTP warning: ${e.message}`));
+  }
 });
