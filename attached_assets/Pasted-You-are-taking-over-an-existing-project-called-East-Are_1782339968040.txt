@@ -1,0 +1,292 @@
+You are taking over an existing project called **East Arena Gaming**.
+
+Your job is NOT to rebuild from zero. First audit the entire codebase and compare the current state against this complete product checklist.
+
+For every item:
+
+* ✅ If already built and working, mark it COMPLETE.
+* ⚠️ If partially built, fix it.
+* ❌ If missing, implement it.
+* Do not duplicate existing systems.
+* Preserve working features.
+
+Before making changes:
+
+1. Analyze the full project structure.
+2. Identify frontend, backend, database, authentication, payments, email, QR system, analytics, and deployment setup.
+3. Give me a report:
+
+   * What is already completed
+   * What is broken
+   * What blocks production launch
+
+Then start fixing from highest priority.
+
+# EAST ARENA GAMING COMPLETE MVP CHECKLIST
+
+## 1. Core Website / Branding
+
+Build a premium gaming event website.
+
+Requirements:
+
+* Modern gaming aesthetic
+* Mobile-first design
+* Fast loading
+* Professional animations
+* Clear call-to-action buttons
+* Event information sections
+* Registration section
+* Payment section
+* Ticket section
+
+Prepare structure for:
+
+* Hero animation/video
+* Voiceover introduction
+* Gaming trailer style landing page
+
+---
+
+# 2. User Registration System
+
+Must have:
+
+* User registration form
+* Secure account creation
+* User database storage
+* Validation
+* Duplicate account protection
+* Registration confirmation
+
+Track:
+
+* Registered users
+* Registration date
+* User activity
+
+---
+
+# 3. Authentication
+
+Admin:
+
+* Secure admin login
+* Protected admin dashboard
+* Admin-only routes
+
+Users:
+
+* User account access
+* View their ticket/payment status
+
+---
+
+# 4. Payment System
+
+Integrate real payment system.
+
+Requirements:
+
+* Paystack integration
+* Real transaction verification
+* Secure secret keys
+* No fake payment confirmation
+
+Track:
+
+* Payment status
+* Transaction reference
+* Amount
+* Date
+
+After payment:
+
+* Automatically confirm registration
+* Generate ticket
+
+---
+
+# 5. QR Ticket System
+
+Build complete QR ticket flow.
+
+Requirements:
+
+After successful registration/payment:
+
+Generate:
+
+* Unique ticket ID
+* QR code
+
+QR should contain:
+
+* Ticket information
+* User information
+* Verification data
+
+Admin should be able to:
+
+* Scan ticket
+* Verify entry
+* See ticket status
+
+Prevent:
+
+* Duplicate ticket usage
+
+---
+
+# 6. Email System
+
+Configure SMTP securely.
+
+Use environment variables only.
+
+Send:
+
+Registration email:
+
+* Welcome message
+* User details
+
+Payment email:
+
+* Payment confirmation
+* Transaction details
+
+Ticket email:
+
+* QR code included
+* Ticket information
+* Event instructions
+
+Never expose email credentials.
+
+---
+
+# 7. Analytics / Tracking
+
+Add tracking system.
+
+Track:
+
+Website:
+
+* Visitors
+* Page views
+* Device type
+* Date/time
+
+Registration:
+
+* Total registrations
+* Conversion rate
+
+Links:
+
+* Click tracking
+
+Users:
+
+* Activity logs
+
+Admin dashboard should show:
+
+* Visitors
+* Registrations
+* Payments
+* Recent activity
+
+---
+
+# 8. Admin Dashboard
+
+Create a clean admin control panel.
+
+Features:
+
+View:
+
+* Users
+* Payments
+* Tickets
+* Analytics
+
+Actions:
+
+* Search users
+* Manage tickets
+* Verify tickets
+* View reports
+
+Secure it.
+
+---
+
+# 9. Production Security
+
+Check:
+
+* Environment variables
+* API keys
+* Authentication
+* Database protection
+* Admin route protection
+* Input validation
+
+Fix security issues.
+
+---
+
+# 10. Railway Deployment
+
+The app is deployed on Railway.
+
+Check:
+
+* PORT configuration
+* Build process
+* Start command
+* Environment variables
+* Production mode
+
+Prepare for custom domain:
+
+eastarenagaming.com.ng
+
+Update:
+
+* URLs
+* Redirects
+* Payment callbacks
+* Email links
+* QR links
+
+No hardcoded Railway URLs.
+
+---
+
+# 11. Final Production Test
+
+Run full test:
+
+1. New user registers
+2. User receives email
+3. Payment works
+4. Payment verifies
+5. Ticket generates
+6. QR email sends
+7. Admin sees user
+8. Analytics records activity
+
+Report:
+
+* Completed
+* Remaining problems
+* Exact launch blockers
+
+After the audit and fixes, stop only when the app is a working production MVP.
+
+I will handle marketing, animations, voiceover, and branding after the technical system is stable.
