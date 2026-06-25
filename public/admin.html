@@ -616,21 +616,22 @@ async function loadOverview() {
   }
 
   const { data: regs } = await api('GET', '/api/admin/registrations?status=pending');
-  const pending = Array.isArray(regs) ? regs.filter(r => r.paymentReference) : [];
+  const pending = Array.isArray(regs) ? regs : [];
   const el = document.getElementById('pending-list');
   if (pending.length === 0) {
-    el.innerHTML = '<p class="text-slate-500 text-sm">No pending payments awaiting review.</p>';
+    el.innerHTML = '<p class="text-slate-500 text-sm">No pending registrations awaiting confirmation.</p>';
     return;
   }
   el.innerHTML = pending.slice(0, 15).map(r => `
     <div class="flex items-center justify-between bg-slate-800/40 border border-slate-800 rounded-xl p-3 flex-wrap gap-2 mb-2">
       <div>
         <div class="font-bold text-white">${esc(r.playerName)} <span class="text-amber-400 font-mono text-sm">@${esc(r.gamertag)}</span></div>
-        <div class="text-xs text-slate-400 mt-0.5">${esc(r.tournamentName)} · Ref: <span class="font-mono text-yellow-300">${esc(r.paymentReference)}</span></div>
-        <div class="text-xs text-slate-600">Ticket: ${r.ticketId} · ${new Date(r.registeredAt).toLocaleDateString()}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${esc(r.email||'—')} · ${esc(r.phone||'—')}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${esc(r.tournamentName)}${r.paymentReference ? ' · Ref: <span class="font-mono text-yellow-300">'+esc(r.paymentReference)+'</span>' : ' · <span class="text-slate-500">No payment ref yet</span>'}</div>
+        <div class="text-xs text-slate-600 mt-0.5">Token: <span class="font-mono text-amber-400">${r.ticketId}</span> · ${new Date(r.registeredAt).toLocaleDateString()}</div>
       </div>
       <div class="flex gap-2">
-        <button onclick="approvePayment('${r.ticketId}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">✓ Approve</button>
+        <button onclick="approvePayment('${r.ticketId}')" class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">✓ Confirm</button>
         <button onclick="rejectPayment('${r.ticketId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition">✗ Reject</button>
       </div>
     </div>`).join('');
@@ -684,7 +685,7 @@ function renderRegsTable(regs) {
       <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">${new Date(r.registeredAt).toLocaleDateString()}</td>
       <td class="px-4 py-3">
         <div class="flex gap-1 flex-wrap">
-          ${r.paymentStatus==='pending' && r.paymentReference ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">✓</button>` : ''}
+          ${r.paymentStatus==='pending' ? `<button onclick="approvePayment('${r.ticketId}')" class="px-2 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">✓</button>` : ''}
           ${r.paymentStatus==='pending' ? `<button onclick="rejectPayment('${r.ticketId}')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition">✗</button>` : ''}
           ${r.paymentStatus==='confirmed' && !r.checkedIn ? `<button onclick="checkinPlayer('${r.ticketId}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg transition">In</button>` : ''}
           <button onclick="deletePlayer('${r.id}','${esc(r.playerName)}')" class="px-2 py-1 bg-red-900/60 hover:bg-red-700 text-red-300 text-xs rounded-lg transition">🗑</button>

@@ -1,0 +1,63 @@
+I need you to fix the registration system before the final production deployment.
+
+Current issue:
+When a user registers, they immediately appear as a confirmed registrant on the public website. This is wrong.
+
+I need a proper pending → payment → confirmation system.
+
+New required flow:
+
+1. Registration process:
+- Anyone can register.
+- After registration, generate a unique registration token/code for that person.
+- Save their information.
+- Their default status must be: PENDING.
+
+2. Pending users:
+- Pending users must NOT appear on the public website.
+- Pending users must NOT increase the public confirmed registration count.
+- Pending users should only appear inside the admin dashboard.
+
+3. Admin dashboard:
+Create/show a pending registrations section with:
+- Full name
+- Email/phone (if available)
+- School ID or registration details
+- Unique registration token/code
+- Payment status
+- Confirmation action/button
+
+4. Payment verification:
+The generated registration token/code must be used to identify the user's payment.
+
+Example:
+User registers → receives token ABC123 → makes payment → payment reference/token is matched → admin can confirm.
+
+5. Confirmation:
+Only after admin confirmation:
+- Change status from PENDING to CONFIRMED.
+- Add that person to the public confirmed registration list/count.
+- Make them appear as a registered participant.
+
+6. Security:
+- Prevent duplicate registrations using email, phone, or school ID.
+- Do not allow users to create multiple registrations to increase numbers.
+
+7. Public website:
+The public side should only display:
+- Confirmed registrants
+- Confirmed registration count
+
+It should never reveal pending users.
+
+8. Keep existing UI/design.
+Do not rebuild the app.
+Only modify the registration, database status logic, admin dashboard, and payment confirmation flow.
+
+After completing:
+- Test with one pending user.
+- Test with one confirmed user.
+- Test duplicate registration.
+- Commit the changes.
+- Push to GitHub.
+- Prepare it for Railway redeployment.

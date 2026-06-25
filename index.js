@@ -284,10 +284,10 @@ async function emailRegistrationConfirmation(reg, tournament) {
   const qrBuffer = await QRCode.toBuffer(ticketUrl, { width: 300, margin: 2 });
 
   const content = `<div class="card">
-  <div class="header"><h1>🏆 EAST ARENA</h1><p>Registration Confirmed</p></div>
+  <div class="header"><h1>🏆 EAST ARENA</h1><p>${isFree ? 'Registration Confirmed' : 'Registration Received'}</p></div>
   <div class="body">
     <h2>Welcome, ${esc(reg.playerName)}!</h2>
-    <p style="color:#94a3b8;font-size:14px;margin:0 0 20px">Your registration for <strong style="color:#fff">${esc(tournament.name)}</strong> has been received.</p>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 20px">Your registration for <strong style="color:#fff">${esc(tournament.name)}</strong> has been received.${isFree ? '' : ' Complete your payment to secure your spot.'}</p>
     <div>
       <div class="row"><span class="label">Ticket ID</span><span class="value gold">${reg.ticketId}</span></div>
       <div class="row"><span class="label">Player Name</span><span class="value">${esc(reg.playerName)}</span></div>
@@ -314,7 +314,7 @@ async function emailRegistrationConfirmation(reg, tournament) {
 
   await sendEmail(
     reg.email,
-    `🏆 Registration Confirmed — ${tournament.name} | Ticket ${reg.ticketId}`,
+    isFree ? `🏆 Registration Confirmed — ${tournament.name} | Ticket ${reg.ticketId}` : `⏳ Registration Received — ${tournament.name} | Ticket ${reg.ticketId}`,
     emailBase(content),
     [{ filename: 'ticket-qr.png', content: qrBuffer, cid: 'qrcode' }]
   );
@@ -637,8 +637,13 @@ app.post('/api/admin/change-password', requireAdmin, (req, res) => {
 app.get('/api/tournaments', (req, res) => {
   const data = loadData();
   const visible = data.tournaments.filter(t => t.status === 'active' || t.status === 'upcoming');
-  // Return registration count (not full IDs)
-  const safe = visible.map(t => ({ ...t, registrations: t.registrations.length }));
+  // Only expose CONFIRMED registration count to the public — pending must not appear
+  const safe = visible.map(t => {
+    const confirmed = data.registrations.filter(
+      r => r.tournamentId === t.id && r.paymentStatus === 'confirmed'
+    ).length;
+    return { ...t, registrations: confirmed };
+  });
   res.json(safe);
 });
 
