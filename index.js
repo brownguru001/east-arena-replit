@@ -59,6 +59,13 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ============================================================
+// HEALTH CHECK — must be early, before rate limiters and auth
+// ============================================================
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
+// ============================================================
 // ANALYTICS — persistent, survives server restarts
 // ============================================================
 const ANALYTICS_FILE = path.join(__dirname, 'analytics.json');
