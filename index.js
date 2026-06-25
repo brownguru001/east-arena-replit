@@ -12,6 +12,9 @@ const crypto = require('crypto');
 
 const app = express();
 
+// Trust proxy — required for correct IP detection behind Railway / Replit / Render load balancers
+app.set('trust proxy', 1);
+
 // ============================================================
 // SECURITY HEADERS
 // ============================================================
@@ -20,20 +23,31 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS — locked to known origins in production
+// CORS — allow the custom domain, any Replit production domains, and Railway/app URL
+// REPLIT_DOMAINS is a comma-separated list set automatically in Replit production deployments
+// REPLIT_DEV_DOMAIN is set only in the dev workspace (different from production subdomain)
+const replitProductionDomains = (process.env.REPLIT_DOMAINS || '')
+  .split(',')
+  .map(d => d.trim())
+  .filter(Boolean)
+  .map(d => `https://${d}`);
+
 const allowedOrigins = [
   'http://localhost:5000',
-  process.env.REPLIT_DEV_DOMAIN      ? `https://${process.env.REPLIT_DEV_DOMAIN}`      : null,
-  process.env.RAILWAY_PUBLIC_DOMAIN  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`  : null,
-  process.env.APP_URL                ? process.env.APP_URL                              : null,
+  process.env.REPLIT_DEV_DOMAIN     ? `https://${process.env.REPLIT_DEV_DOMAIN}`     : null,
+  process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null,
+  process.env.APP_URL               ? process.env.APP_URL.replace(/\/$/, '')         : null,
   'https://eastarenagaming.com.ng',
   'https://www.eastarenagaming.com.ng',
+  ...replitProductionDomains,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // server-to-server / curl / Paystack webhooks
+    if (!origin) return cb(null, true); // server-to-server / curl / same-origin requests
     if (allowedOrigins.some(o => origin === o || origin.startsWith(o))) return cb(null, true);
+    // Log blocked origins to help diagnose missing domains
+    console.warn(`[CORS] Blocked origin: ${origin}. Add to APP_URL or REPLIT_DOMAINS if legitimate.`);
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true
