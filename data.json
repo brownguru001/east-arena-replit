@@ -20,7 +20,8 @@
       "maxPlayers": 16,
       "registrations": [
         "4f69f7cd-d19e-4e62-8fe7-d87a1243bbb7",
-        "3ed2aa54-7eea-415e-84eb-36886064b055"
+        "3ed2aa54-7eea-415e-84eb-36886064b055",
+        "fb406687-4ab0-4a74-9843-dd7890beb49d"
       ],
       "description": "Premium FIFA tournament. Entry fee required. Compete for real prize money."
     },
@@ -112,6 +113,24 @@
       "approvedAt": null,
       "rejectedAt": null,
       "registeredAt": "2026-06-25T08:05:01.351Z"
+    },
+    {
+      "id": "fb406687-4ab0-4a74-9843-dd7890beb49d",
+      "ticketId": "7CD4FA16",
+      "playerName": "Johnpaul Ogini",
+      "gamertag": "jrui",
+      "phone": "7437464673",
+      "email": "brunoonuachu@gmail.com",
+      "location": "Owerri",
+      "tournamentId": 1,
+      "paymentStatus": "pending",
+      "paymentReference": null,
+      "referenceSubmittedAt": null,
+      "checkedIn": false,
+      "checkedInAt": null,
+      "approvedAt": null,
+      "rejectedAt": null,
+      "registeredAt": "2026-06-25T09:14:00.917Z"
     }
   ]
 }
