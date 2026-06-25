@@ -1318,17 +1318,50 @@ app.use((req, res) => {
 });
 
 // ============================================================
+// PROCESS STABILITY — prevent crashes from unhandled errors
+// ============================================================
+process.on('unhandledRejection', (reason) => {
+  console.error('[UNHANDLED REJECTION]', reason);
+  // Log but do not crash — keeps the server alive for other requests
+});
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION]', err);
+  // Flush analytics then exit — let the process manager restart us
+  if (_analyticsDirty) { try { saveAnalytics(); } catch (_) {} }
+  process.exit(1);
+});
+
+// ============================================================
 // START SERVER
 // ============================================================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ East Arena Gaming Tournament — http://localhost:${PORT}`);
   console.log(`  Admin: http://localhost:${PORT}/admin`);
-  console.log(`  Default admin password: ${getAdminPassword()}`);
   const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
-  console.log(`  Email: ${emailUser ? `configured ✓ (${emailUser})` : 'NOT configured — set EMAIL_USER + EMAIL_PASS'}`);
-  console.log(`  Paystack: ${process.env.PAYSTACK_SECRET_KEY ? 'configured ✓' : 'NOT configured'}`);
-  if (emailUser) {
-    createMailer()?.verify().then(() => console.log('  SMTP connection: ✓ verified')).catch(e => console.warn(`  SMTP warning: ${e.message}`));
-  }
+  console.log(`  Email: ${emailUser ? `configured ✓ (${emailUser})` : 'NOT configured'}`);
+  console.log(`  Payment mode: ${(loadData().settings?.paymentMode || 'manual')}`);
 });
+
+// ============================================================
+// GRACEFUL SHUTDOWN — required for autoscale SIGTERM
+// ============================================================
+function shutdown(signal) {
+  console.log(`[${signal}] Graceful shutdown started…`);
+  // Flush any pending analytics immediately before exit
+  if (_analyticsDirty) {
+    try { saveAnalytics(); console.log('[Shutdown] Analytics flushed.'); }
+    catch (e) { console.warn('[Shutdown] Analytics flush failed:', e.message); }
+  }
+  server.close(() => {
+    console.log('[Shutdown] HTTP server closed. Exiting.');
+    process.exit(0);
+  });
+  // Force-exit after 10 s if connections hang
+  setTimeout(() => {
+    console.warn('[Shutdown] Timeout — forcing exit.');
+    process.exit(0);
+  }, 10_000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));

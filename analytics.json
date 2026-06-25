@@ -1,9 +1,17 @@
 {
-  "totalViews": 1,
+  "totalViews": 2,
   "dailyCounts": {
-    "2026-06-24": 1
+    "2026-06-24": 2
   },
   "recentViews": [
+    {
+      "path": "/admin",
+      "timestamp": "2026-06-24T23:57:03.119Z",
+      "device": "desktop",
+      "browser": "Chrome",
+      "ipHash": "localhost",
+      "referrer": null
+    },
     {
       "path": "/admin",
       "timestamp": "2026-06-24T22:29:08.890Z",

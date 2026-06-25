@@ -41,3 +41,7 @@ ADMIN_PASSWORD = "Onuachu247"
 BANK_NAME = "OPay "
 ACCOUNT_NAME = "Onuachu Bruno Odinakachukwu "
 ACCOUNT_NUMBER = "8087268132"
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["node", "index.js"]
