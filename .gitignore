@@ -1,4 +1,13 @@
 node_modules/
 .env
+.env.*
 .local/
 *.log
+.replit
+replit.nix
+.agents/
+attached_assets/
+zipFile.zip
+analytics.json
+.cache/
+.upm/
