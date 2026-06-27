@@ -1,9 +1,18 @@
 {
-  "totalViews": 2,
+  "totalViews": 3,
   "dailyCounts": {
-    "2026-06-24": 2
+    "2026-06-24": 2,
+    "2026-06-27": 1
   },
   "recentViews": [
+    {
+      "path": "/admin",
+      "timestamp": "2026-06-27T02:27:21.911Z",
+      "device": "mobile",
+      "browser": "Safari",
+      "ipHash": "b5dfea993b",
+      "referrer": null
+    },
     {
       "path": "/admin",
       "timestamp": "2026-06-24T23:57:03.119Z",
@@ -22,6 +31,7 @@
     }
   ],
   "uniqueIpHashes": [
-    "localhost"
+    "localhost",
+    "b5dfea993b"
   ]
 }
